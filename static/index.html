@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperliquid Anomaly Metrics Dashboard</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #121212;
+            color: rgba(255, 255, 255, 0.87);
+            padding: 20px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+            padding: 24px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            /* Material elevation 4 */
+            box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2),
+                        0px 4px 5px 0px rgba(0,0,0,0.14),
+                        0px 1px 10px 0px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            font-size: 34px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            letter-spacing: 0.25px;
+            background: linear-gradient(135deg, #9FA8DA 0%, #F48FB1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 16px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            /* Material elevation 2 */
+            box-shadow: 0px 1px 5px 0px rgba(0,0,0,0.2),
+                        0px 2px 2px 0px rgba(0,0,0,0.14),
+                        0px 3px 1px -2px rgba(0,0,0,0.12);
+            transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            /* Material elevation 8 */
+            box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),
+                        0px 8px 10px 1px rgba(0,0,0,0.14),
+                        0px 3px 14px 2px rgba(0,0,0,0.12);
+        }
+
+        .stat-card.active {
+            background: #2a2a2a;
+            border: 1px solid #9FA8DA;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 34px;
+            font-weight: 400;
+            margin-top: 8px;
+            color: #9FA8DA;
+            letter-spacing: 0.25px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+            /* Material elevation 2 */
+            box-shadow: 0px 1px 5px 0px rgba(0,0,0,0.2),
+                        0px 2px 2px 0px rgba(0,0,0,0.14),
+                        0px 3px 1px -2px rgba(0,0,0,0.12);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+            letter-spacing: 0.25px;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.42);
+            border-radius: 4px 4px 0 0;
+            color: rgba(255, 255, 255, 0.87);
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-bottom-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        select:hover, input:hover {
+            background: #333333;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-bottom: 2px solid #9FA8DA;
+            background: #2a2a2a;
+        }
+
+        button {
+            padding: 10px 24px;
+            background: #9FA8DA;
+            border: none;
+            border-radius: 4px;
+            color: #121212;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.25px;
+            transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                        background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Material elevation 2 */
+            box-shadow: 0px 1px 5px 0px rgba(0,0,0,0.2),
+                        0px 2px 2px 0px rgba(0,0,0,0.14),
+                        0px 3px 1px -2px rgba(0,0,0,0.12);
+        }
+
+        button:hover {
+            background: #B39DDB;
+            /* Material elevation 4 */
+            box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2),
+                        0px 4px 5px 0px rgba(0,0,0,0.14),
+                        0px 1px 10px 0px rgba(0,0,0,0.12);
+        }
+
+        button:active {
+            /* Material elevation 8 */
+            box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),
+                        0px 8px 10px 1px rgba(0,0,0,0.14),
+                        0px 3px 14px 2px rgba(0,0,0,0.12);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .table-container {
+            background: #1e1e1e;
+            border-radius: 4px;
+            padding: 0;
+            overflow-x: auto;
+            /* Material elevation 2 */
+            box-shadow: 0px 1px 5px 0px rgba(0,0,0,0.2),
+                        0px 2px 2px 0px rgba(0,0,0,0.14),
+                        0px 3px 1px -2px rgba(0,0,0,0.12);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th {
+            background: #2a2a2a;
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        th:hover {
+            background: #333333;
+        }
+
+        th.sortable::after {
+            content: " ↕";
+            opacity: 0.5;
+        }
+
+        th.sort-asc::after {
+            content: " ↑";
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            content: " ↓";
+            opacity: 1;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.87);
+            letter-spacing: 0.25px;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .coin-cell {
+            font-weight: 500;
+            font-size: 14px;
+            color: #9FA8DA;
+            letter-spacing: 0.15px;
+        }
+
+        .clickable-coin {
+            cursor: pointer;
+            transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .clickable-coin:hover {
+            color: #F48FB1;
+            text-decoration: underline;
+        }
+
+        .flag-high {
+            background: #EF9A9A;
+            color: #121212;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.25px;
+            display: inline-block;
+        }
+
+        .flag-medium {
+            background: #FFE082;
+            color: #121212;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.25px;
+            display: inline-block;
+        }
+
+        .flag-low {
+            background: #90CAF9;
+            color: #121212;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.25px;
+            display: inline-block;
+        }
+
+        .flag-none {
+            color: rgba(255, 255, 255, 0.38);
+            font-size: 12px;
+            letter-spacing: 0.4px;
+        }
+
+        /* Signal styling */
+        .signal-none {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+        }
+
+        .signal-buy {
+            color: #A5D6A7;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(165, 214, 167, 0.1);
+            cursor: help;
+        }
+
+        .signal-fade {
+            color: #EF9A9A;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(239, 154, 154, 0.1);
+            cursor: help;
+        }
+
+        .signal-spoof {
+            color: #FFE082;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 224, 130, 0.1);
+            cursor: help;
+        }
+
+        .signal-exit {
+            color: #B0BEC5;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(176, 190, 197, 0.1);
+            cursor: help;
+        }
+
+        .signal-strength {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .signal-strength .bar {
+            display: inline-block;
+            width: 3px;
+            height: 12px;
+            border-radius: 1px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .signal-strength .bar-active {
+            background: currentColor;
+            opacity: 0.8;
+        }
+
+        .signal-strength .bar-inactive {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .positive {
+            color: #A5D6A7;
+        }
+
+        .negative {
+            color: #EF9A9A;
+        }
+
+        .neutral {
+            color: #B0BEC5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #B0BEC5;
+        }
+
+        .error {
+            background: #EF9A9A;
+            color: #121212;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: #B0BEC5;
+            margin-top: 10px;
+        }
+
+        /* Metric-specific color coding */
+        .metric-extreme-high {
+            background-color: rgba(239, 154, 154, 0.2);
+            color: #EF9A9A;
+            font-weight: 600;
+        }
+
+        .metric-high {
+            color: #FFE082;
+            font-weight: 600;
+        }
+
+        /* Override metric colors when combined with positive/negative */
+        .metric-extreme-high.positive {
+            background-color: rgba(165, 214, 167, 0.2);
+            color: #A5D6A7;
+        }
+
+        .metric-high.positive {
+            color: #A5D6A7;
+        }
+
+        .metric-extreme-high.negative {
+            background-color: rgba(239, 154, 154, 0.2);
+            color: #EF9A9A;
+        }
+
+        .metric-high.negative {
+            color: #EF9A9A;
+        }
+
+        .metric-low {
+            color: #90CAF9;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: #616161;
+            color: rgba(255, 255, 255, 0.87);
+            text-align: left;
+            border-radius: 4px;
+            padding: 12px 16px;
+            position: fixed;
+            z-index: 99999;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+            opacity: 0;
+            transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 12px;
+            line-height: 1.6;
+            letter-spacing: 0.4px;
+            /* Material elevation 16 (tooltip) */
+            box-shadow: 0px 8px 10px -5px rgba(0,0,0,0.2),
+                        0px 16px 24px 2px rgba(0,0,0,0.14),
+                        0px 6px 30px 5px rgba(0,0,0,0.12);
+            pointer-events: none;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #616161 transparent transparent transparent;
+        }
+
+        /* Chart modal */
+        .chart-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .chart-modal-content {
+            background-color: #1e1e1e;
+            margin: 2% auto;
+            padding: 24px;
+            border-radius: 4px;
+            width: 95%;
+            max-width: 1600px;
+            height: 90vh;
+            position: relative;
+            box-shadow: 0px 8px 10px -5px rgba(0,0,0,0.2),
+                        0px 16px 24px 2px rgba(0,0,0,0.14),
+                        0px 6px 30px 5px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .chart-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #9FA8DA;
+        }
+
+        .chart-close {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 32px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: none;
+            border: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-close:hover {
+            color: #F48FB1;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .chart-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chart-control-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        .chart-control-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chart-control-btn {
+            padding: 6px 12px;
+            background: #2a2a2a;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.87);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chart-control-btn:hover {
+            background: #333333;
+            border-color: #9FA8DA;
+        }
+
+        .chart-control-btn.active {
+            background: #9FA8DA;
+            color: #121212;
+            border-color: #9FA8DA;
+        }
+
+        .chart-container {
+            flex: 1;
+            background: #121212;
+            border-radius: 4px;
+            overflow: visible;
+            position: relative;
+            width: 100%;
+        }
+
+        #depth-canvas {
+            margin: 0 auto;
+            display: block;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+        }
+
+        .metric-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #2a2a2a;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .metric-checkbox:hover {
+            border-color: #9FA8DA;
+        }
+
+        .metric-checkbox input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .metric-checkbox label {
+            cursor: pointer;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.87);
+        }
+
+        .token-input {
+            padding: 6px 12px;
+            background: #2a2a2a;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.87);
+            font-size: 13px;
+            width: 120px;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: #9FA8DA;
+        }
+
+        .token-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .token-tag {
+            padding: 4px 8px;
+            background: #9FA8DA;
+            color: #121212;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .token-tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .token-tag-remove:hover {
+            color: #F48FB1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Hyperliquid Anomaly Metrics</h1>
+            <p style="color: #B0BEC5; margin-top: 5px;">Real-time anomaly detection for day/swing trading opportunities</p>
+
+            <div class="stats" id="stats">
+                <div class="stat-card" data-filter="all">
+                    <div class="stat-label">Total Tokens</div>
+                    <div class="stat-value" id="token-count">-</div>
+                </div>
+                <div class="stat-card" data-filter="buy_dip">
+                    <div class="stat-label">Buy Dip Signals</div>
+                    <div class="stat-value" style="color: #A5D6A7;" id="buy-dip-signals">-</div>
+                </div>
+                <div class="stat-card" data-filter="bearish">
+                    <div class="stat-label">Bearish Signals</div>
+                    <div class="stat-value" style="color: #EF9A9A;" id="bearish-signals">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Last Update</div>
+                    <div class="stat-value" style="font-size: 14px;" id="last-update">-</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="interval">Candle:</label>
+                <select id="interval">
+                    <option value="5m">5 Minutes</option>
+                    <option value="1h">1 Hour</option>
+                    <option value="4h">4 Hours</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Filter tokens...">
+            </div>
+
+            <div style="margin-left: auto; color: rgba(255, 255, 255, 0.6); font-size: 13px;">
+                <span id="candle-count">Loading...</span>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div class="table-container">
+            <div id="loading" class="loading">Loading metrics...</div>
+            <table id="metrics-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th class="sortable tooltip" data-col="coin">Token
+                            <span class="tooltiptext">Click token name to open chart</span>
+                        </th>
+                        <th class="sortable tooltip" data-col="price">Price
+                            <span class="tooltiptext">Current close price</span>
+                        </th>
+                        <th class="sortable tooltip" data-col="vwap">VWAP
+                            <span class="tooltiptext"><strong>Volume Weighted Average Price</strong><br/>Where most trading volume happened.<br/>• Price ABOVE VWAP = bullish (buyers in control)<br/>• Price BELOW VWAP = bearish (sellers in control)<br/><em>Think of it as today's "fair price" level</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="price_deviation_from_ema">EMA Dev%
+                            <span class="tooltiptext"><strong>Distance from 20-period Moving Average</strong><br/>How stretched price is from normal.<br/>• >+10% = token pumped hard (might reverse down)<br/>• <-10% = token dumped hard (might bounce up)<br/><em>Extreme values often snap back to average</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="obv">OBV
+                            <span class="tooltiptext"><strong>On-Balance Volume - Volume Flow Direction</strong><br/>Running total of buy vs sell volume.<br/>• GREEN (positive) = buyers accumulating<br/>• RED (negative) = sellers distributing<br/>• Price up + OBV flat = FAKE pump (no real buyers)<br/><em>Healthy moves need volume backing them</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="cumulative_delta">Cum Δ
+                            <span class="tooltiptext"><strong>Cumulative Delta - Aggressive Buy/Sell Pressure</strong><br/>Net of market buys minus market sells.<br/>• GREEN = aggressive buyers hitting ask<br/>• RED = aggressive sellers hitting bid<br/>• Flip from negative to positive = buyers stepping in<br/><em>Shows who's more desperate: buyers or sellers</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="volume_ratio_to_avg">Vol Ratio
+                            <span class="tooltiptext"><strong>Volume Compared to Average</strong><br/>How unusual is current trading activity?<br/>• 1.0x = normal volume<br/>• >3.0x = huge spike (possible manipulation/breakout)<br/>• <0.5x = very quiet (nobody cares)<br/><em>Big moves need big volume to be real</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="rsi_14">RSI
+                            <span class="tooltiptext"><strong>Relative Strength Index - Momentum</strong><br/>Measures if price moved too far, too fast.<br/>• >70 = OVERBOUGHT (pumped, might reverse down)<br/>• <30 = OVERSOLD (dumped, might bounce up)<br/>• 50 = neutral<br/><em>Extremes often precede reversals</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="macd_histogram">MACD
+                            <span class="tooltiptext"><strong>MACD Histogram - Trend Strength</strong><br/>Is momentum getting stronger or weaker?<br/>• Positive & growing = uptrend accelerating<br/>• Positive & shrinking = uptrend weakening (watch out)<br/>• Negative & growing = downtrend accelerating<br/>• Negative & shrinking = downtrend weakening<br/><em>Histogram shrinking = trend losing steam</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="oi_change_pct">OI Δ%
+                            <span class="tooltiptext"><strong>Open Interest Change - New Positions</strong><br/>How many new futures contracts opened?<br/>• +30%+ = lots of NEW leverage entering<br/>• -20%+ = positions CLOSING (unwinding)<br/>• Rising OI + rising price = new longs (liquidation risk)<br/>• Rising OI + falling price = new shorts<br/><em>High OI = more fuel for liquidation cascades</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="funding_rate_zscore">Fund Z
+                            <span class="tooltiptext"><strong>Funding Rate Z-Score - How Extreme Are Fees?</strong><br/>Measures funding rate vs its average.<br/>• >2 = extremely HIGH funding (longs paying shorts)<br/>• <-2 = extremely LOW funding (shorts paying longs)<br/>• High positive = too many longs (likely to reverse down)<br/><em>Extreme funding = one side too crowded</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="buy_sell_ratio">B/S Ratio
+                            <span class="tooltiptext"><strong>Buy vs Sell Order Book Depth</strong><br/>Ratio of buy orders to sell orders (top 10 levels).<br/>• >1.5 = more buy support (bullish)<br/>• <0.5 = more sell resistance (bearish)<br/>• 1.0 = balanced<br/><em>BUT: Can be spoofed (fake orders)</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="cumulative_imbalance_pct">Book Imb%
+                            <span class="tooltiptext"><strong>Order Book Imbalance - Bid/Ask Skew</strong><br/>% difference between buy and sell depth.<br/>• +20% = way more buyers than sellers waiting<br/>• -20% = way more sellers than buyers waiting<br/>• Sudden FLIP (e.g., -30%) = walls pulled (spoof)<br/><em>Watch for sudden changes = fake liquidity</em></span>
+                        </th>
+                        <th class="sortable tooltip" data-col="signal">MM Signal
+                            <span class="tooltiptext"><strong>Market Maker Counter-Trading Signals</strong><br/>Automated alerts for manipulation patterns:<br/><br/><span style="color: #A5D6A7;">●</span> <strong>Buy Dip:</strong> Token dumped, now reversing<br/>(EMA <-5%, OBV rebounds, Delta flips positive, or Funding <-0.03%)<br/><br/><span style="color: #EF9A9A;">●</span> <strong>Fade Pump:</strong> Fake pump about to reverse<br/>(RSI >70, OBV not confirming, high Funding + OI, or B/S <0.5)<br/><br/><span style="color: #FFE082;">●</span> <strong>Spoof Alert:</strong> Fake breakout with liquidity pull<br/>(Volume >3x, Imbalance <-10%, MACD weakening, walls vanish)<br/><br/><span style="color: #B0BEC5;">●</span> <strong>Exit/Accum:</strong> Trend exhausted, time to exit or DCA<br/>(Price crosses below VWAP, OI drops >20%, volume dead)<br/><br/><em>Need 2-3 indicators to trigger signal</em></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div id="chart-modal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-header">
+                <div class="chart-title" id="chart-modal-title">Chart</div>
+                <button class="chart-close" id="chart-close">&times;</button>
+            </div>
+
+            <div class="chart-controls">
+                <div class="chart-control-group">
+                    <div class="chart-control-label">View</div>
+                    <div class="chart-control-buttons">
+                        <button class="chart-control-btn active" data-view="metrics">Metrics</button>
+                        <button class="chart-control-btn" data-view="orderbook">Orderbook</button>
+                    </div>
+                </div>
+
+                <div class="chart-control-group">
+                    <div class="chart-control-label">Candle</div>
+                    <div class="chart-control-buttons">
+                        <button class="chart-control-btn active" data-interval="5m">5m (2d)</button>
+                        <button class="chart-control-btn" data-interval="1h">1h (7d)</button>
+                        <button class="chart-control-btn" data-interval="4h">4h (90d)</button>
+                    </div>
+                </div>
+
+                <div class="chart-control-group" id="metrics-controls">
+                    <div class="chart-control-label">Metrics</div>
+                    <div class="chart-control-buttons" id="metric-selector">
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="price" checked>
+                            <span>Price</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="vwap" checked>
+                            <span>VWAP</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="price_deviation_from_ema">
+                            <span>EMA Dev%</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="obv">
+                            <span>OBV</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="cumulative_delta">
+                            <span>Cum Δ</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="volume_ratio_to_avg">
+                            <span>Vol Ratio</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="rsi_14">
+                            <span>RSI</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="macd_histogram">
+                            <span>MACD</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="oi_change_pct">
+                            <span>OI Δ%</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="funding_rate_zscore">
+                            <span>Funding Z</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="buy_sell_ratio">
+                            <span>B/S Ratio</span>
+                        </label>
+                        <label class="metric-checkbox">
+                            <input type="checkbox" value="cumulative_imbalance_pct">
+                            <span>Book Imb%</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="chart-control-group" id="compare-controls">
+                    <div class="chart-control-label">Compare Tokens</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" class="token-input" id="token-add-input" placeholder="Add token...">
+                        <button class="chart-control-btn" id="token-add-btn">Add</button>
+                    </div>
+                    <div class="token-tags" id="token-tags"></div>
+                </div>
+
+                <div class="chart-control-group" id="orderbook-controls" style="display: none;">
+                    <div class="chart-control-label">Orderbook Mode</div>
+                    <div class="chart-control-buttons">
+                        <button class="chart-control-btn active" data-ob-mode="heatmap">Liquidity Heatmap</button>
+                        <button class="chart-control-btn" data-ob-mode="imbalance">Imbalance Timeline</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div id="chart"></div>
+                <canvas id="depth-canvas" style="display: none;"></canvas>
+                <div id="depth-slider-container" style="display: none; padding: 10px 20px; background: #1E1E1E;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button id="depth-play-btn" class="chart-control-btn">▶ Play</button>
+                        <input type="range" id="depth-slider" style="flex: 1;" min="0" max="100" value="0">
+                        <button id="depth-zoom-btn" class="chart-control-btn" title="Toggle between 5 and 10 levels">5 Levels</button>
+                        <button id="price-zoom-in-btn" class="chart-control-btn" title="Zoom in on price range">🔍+</button>
+                        <button id="price-zoom-out-btn" class="chart-control-btn" title="Zoom out on price range">🔍-</button>
+                        <span id="depth-timestamp" style="color: #B0BEC5; font-size: 12px;">--:--:--</span>
+                        <span id="depth-mid-price" style="color: #9FA8DA; font-size: 12px; font-weight: 600;">Mid: --</span>
+                    </div>
+                </div>
+                <div class="chart-loading" id="chart-loading">Loading chart data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let currentData = [];
+        let currentCandleCount = 0;
+        let currentSort = { column: 'anomaly_score', order: 'desc' };
+        let currentFilter = 'all';
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                document.getElementById('token-count').textContent = data.token_count || '-';
+                document.getElementById('buy-dip-signals').textContent = data.buy_dip_signals || '0';
+                document.getElementById('bearish-signals').textContent = data.bearish_signals || '0';
+
+                if (data.last_update) {
+                    const date = new Date(data.last_update);
+                    document.getElementById('last-update').textContent = date.toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load metrics data
+        async function loadData() {
+            const interval = document.getElementById('interval').value;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('metrics-table').style.display = 'none';
+            document.getElementById('error-container').innerHTML = '';
+
+            try {
+                const response = await fetch(
+                    `/api/metrics?interval=${interval}&sort_by=coin&order=asc&limit=200`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                currentData = result.data;
+                currentCandleCount = result.candle_count;
+
+                // Update candle count display
+                document.getElementById('candle-count').textContent = `${currentData.length} tokens • ${interval} • ${currentCandleCount} candles`;
+
+                // Apply current sort
+                sortData(currentSort.column, false); // false = don't toggle, use current order
+
+                loadStats();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('metrics-table').style.display = 'table';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('error-container').innerHTML =
+                    `<div class="error">Error loading data: ${error.message}</div>`;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Sort data by column
+        function sortData(column, toggle = true) {
+            // Toggle sort order if clicking same column
+            if (toggle) {
+                if (currentSort.column === column) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = column;
+                    currentSort.order = 'desc'; // Default to descending for new column
+                }
+            }
+
+            // Sort the data
+            currentData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // Handle null/undefined
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
+
+                // String comparison for coin and flag
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return currentSort.order === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                }
+
+                // Numeric comparison
+                return currentSort.order === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+
+            // Update UI
+            updateSortIndicators();
+            filterData(); // Use filterData to respect search filter
+        }
+
+        // Update sort indicators on headers
+        function updateSortIndicators() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.col === currentSort.column) {
+                    th.classList.add(`sort-${currentSort.order}`);
+                }
+            });
+        }
+
+        // Handle header clicks for sorting
+        function initSortHandlers() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    sortData(th.dataset.col);
+                });
+            });
+        }
+
+        // Filter data by search term
+        function filterData() {
+            if (!currentData || currentData.length === 0) return;
+
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            let filteredData = currentData.filter(row => {
+                // Apply search filter
+                const matchesSearch = row.coin.toLowerCase().includes(searchTerm);
+
+                // Apply signal filter
+                let matchesSignal = true;
+                if (currentFilter === 'buy_dip') {
+                    matchesSignal = row.signal && row.signal.startsWith('buy_dip');
+                } else if (currentFilter === 'bearish') {
+                    matchesSignal = row.signal && (row.signal.startsWith('fade_pump') ||
+                                                     row.signal.startsWith('spoof_alert') ||
+                                                     row.signal.startsWith('exit_accum'));
+                }
+                // currentFilter === 'all' matches everything
+
+                return matchesSearch && matchesSignal;
+            });
+
+            // Update count
+            const intervalSelect = document.getElementById('interval');
+            const intervalValue = intervalSelect ? intervalSelect.value : '';
+            const countText = searchTerm || currentFilter !== 'all'
+                ? `${filteredData.length} / ${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles`
+                : `${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles`;
+            document.getElementById('candle-count').textContent = countText;
+
+            renderTable(filteredData);
+        }
+
+        // Render table with data
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td class="coin-cell clickable-coin" data-coin="${row.coin}" title="Click to open chart">${row.coin}</td>
+                    <td>${formatPrice(row.price)}</td>
+                    <td class="${getVWAPClass(row.price, row.vwap)}">${formatPrice(row.vwap)}</td>
+                    <td class="${getDeviationClass(row.price_deviation_from_ema)}">${formatPercent(row.price_deviation_from_ema)}</td>
+                    <td class="${getOBVClass(row.obv_zscore)}">${formatLargeNumber(row.obv)}</td>
+                    <td class="${getDeltaClass(row.cumulative_delta)}">${formatLargeNumber(row.cumulative_delta)}</td>
+                    <td class="${getVolumeRatioClass(row.volume_ratio_to_avg)}">${formatNumber(row.volume_ratio_to_avg, 2)}x</td>
+                    <td class="${getRSIClass(row.rsi_14)}">${formatNumber(row.rsi_14, 1)}</td>
+                    <td class="${getMACDClass(row.macd_histogram)}">${formatNumber(row.macd_histogram, 4)}</td>
+                    <td class="${getChangeClass(row.oi_change_pct)}">${formatPercent(row.oi_change_pct)}</td>
+                    <td class="${getZScoreClass(row.funding_rate_zscore)}">${formatNumber(row.funding_rate_zscore, 2)}</td>
+                    <td class="${getRatioClass(row.buy_sell_ratio)}">${formatNumber(row.buy_sell_ratio, 2)}</td>
+                    <td class="${getImbalanceClass(row.cumulative_imbalance_pct)}">${formatPercent(row.cumulative_imbalance_pct)}</td>
+                    <td>${formatSignal(row.signal)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Formatting functions
+        function formatPrice(val) {
+            if (val === null || val === undefined) return '-';
+            return val >= 1 ? val.toFixed(2) : val.toFixed(6);
+        }
+
+        function formatPercent(val) {
+            if (val === null || val === undefined) return '-';
+            const sign = val > 0 ? '+' : '';
+            return `${sign}${val.toFixed(2)}%`;
+        }
+
+        function formatNumber(val, decimals = 2) {
+            if (val === null || val === undefined) return '-';
+            return val.toFixed(decimals);
+        }
+
+        function formatLargeNumber(val) {
+            if (val === null || val === undefined) return '-';
+            const sign = val < 0 ? '-' : '';
+            const absVal = Math.abs(val);
+            if (absVal >= 1e9) return sign + (absVal / 1e9).toFixed(2) + 'B';
+            if (absVal >= 1e6) return sign + (absVal / 1e6).toFixed(2) + 'M';
+            if (absVal >= 1e3) return sign + (absVal / 1e3).toFixed(2) + 'K';
+            return val.toFixed(2);
+        }
+
+        function formatFlag(flag) {
+            if (!flag) return '<span class="flag-none">none</span>';
+            return `<span class="flag-${flag}">${flag}</span>`;
+        }
+
+        function formatDirection(direction) {
+            if (!direction || direction === 'mixed') return '<span style="color: #B0BEC5;">neutral</span>';
+            if (direction === 'bullish') return '<span style="color: #A5D6A7;">bullish</span>';
+            if (direction === 'bearish') return '<span style="color: #EF9A9A;">bearish</span>';
+            return direction;
+        }
+
+        function formatSignal(signal) {
+            if (!signal || signal === 'none') return '<span class="signal-none">-</span>';
+
+            // Parse signal format: "signal_type:reason1 + reason2 + reason3"
+            const parts = signal.split(':');
+            const signalType = parts[0];
+            const reasons = parts.length > 1 ? parts[1] : '';
+
+            // Count number of confirmations (reasons)
+            const confirmationCount = reasons ? reasons.split('+').length : 0;
+
+            let icon = '';
+            let label = '';
+            let colorClass = '';
+            let explanation = '';
+            let strengthBars = '';
+
+            if (signalType === 'buy_dip') {
+                icon = '●';
+                label = 'Buy Dip';
+                colorClass = 'signal-buy';
+                explanation = 'Post-shakeout entry. MM dumps to shake weak hands, catch buyback lows.';
+            } else if (signalType === 'fade_pump') {
+                icon = '●';
+                label = 'Fade Pump';
+                colorClass = 'signal-fade';
+                explanation = 'Reversal trap. Engineered pump to milk longs before rug.';
+            } else if (signalType === 'spoof_alert') {
+                icon = '●';
+                label = 'Spoof';
+                colorClass = 'signal-spoof';
+                explanation = 'Liquidity yank. MM spoofs breakout then pulls bids.';
+            } else if (signalType === 'exit_accum') {
+                icon = '●';
+                label = 'Exit/Accum';
+                colorClass = 'signal-exit';
+                explanation = 'Cycle end. Use for trailing stops or DCA.';
+            }
+
+            // Generate strength bars (2-4 confirmations)
+            if (confirmationCount >= 2) {
+                strengthBars = '<span class="signal-strength">';
+                for (let i = 0; i < 4; i++) {
+                    if (i < confirmationCount) {
+                        strengthBars += '<span class="bar bar-active"></span>';
+                    } else {
+                        strengthBars += '<span class="bar bar-inactive"></span>';
+                    }
+                }
+                strengthBars += '</span>';
+            }
+
+            return `<span class="${colorClass}" title="${explanation}&#10;&#10;Triggers: ${reasons}&#10;Confirmations: ${confirmationCount}">${icon} ${label} ${strengthBars}</span>`;
+        }
+
+        // Color coding classes
+        function getChangeClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            if (val > 5) return 'metric-extreme-high positive';
+            if (val > 2) return 'metric-high positive';
+            if (val < -5) return 'metric-extreme-high negative';
+            if (val < -2) return 'metric-high negative';
+            return val > 0 ? 'positive' : 'negative';
+        }
+
+        function getVWAPClass(price, vwap) {
+            if (price === null || vwap === null || vwap === 0) return 'neutral';
+            // Price above VWAP = bullish -> green
+            // Price below VWAP = bearish -> red
+            const deviation = ((price - vwap) / vwap) * 100;
+            if (deviation > 2) return 'metric-high positive';
+            if (deviation < -2) return 'metric-high negative';
+            return deviation > 0 ? 'positive' : (deviation < 0 ? 'negative' : 'neutral');
+        }
+
+        function getDeviationClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Positive deviation = price above EMA (bullish) -> green
+            // Negative deviation = price below EMA (bearish) -> red
+            if (val > 10) return 'metric-extreme-high positive';
+            if (val > 5) return 'metric-high positive';
+            if (val < -10) return 'metric-extreme-high negative';
+            if (val < -5) return 'metric-high negative';
+            return val > 0 ? 'positive' : (val < 0 ? 'negative' : 'neutral');
+        }
+
+        function getOBVClass(zscore) {
+            if (zscore === null || zscore === undefined) return '';
+            // Use Z-score for relative intensity (like funding rate)
+            // >2 = extremely strong buying, <-2 = extremely strong selling
+            if (zscore > 2) return 'metric-extreme-high positive';
+            if (zscore > 1) return 'metric-high positive';
+            if (zscore < -2) return 'metric-extreme-high negative';
+            if (zscore < -1) return 'metric-high negative';
+            return zscore > 0 ? 'positive' : (zscore < 0 ? 'negative' : 'neutral');
+        }
+
+        function getRSIClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // RSI > 70 = overbought (bearish reversal) -> red
+            // RSI < 30 = oversold (bullish reversal) -> green
+            if (val > 70) return 'metric-extreme-high negative';
+            if (val < 30) return 'metric-extreme-high positive';
+            if (val > 60) return 'metric-high negative';
+            if (val < 40) return 'metric-high positive';
+            return 'neutral';
+        }
+
+        function getMACDClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Positive MACD histogram = bullish momentum -> green
+            // Negative MACD histogram = bearish momentum -> red
+            if (val > 0.01) return 'positive';
+            if (val < -0.01) return 'negative';
+            return 'neutral';
+        }
+
+        function getDeltaClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Positive cumulative delta = net buying pressure (bullish) -> green
+            // Negative cumulative delta = net selling pressure (bearish) -> red
+            if (val > 0) return 'positive';
+            if (val < 0) return 'negative';
+            return 'neutral';
+        }
+
+        function getVolumeRatioClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // High volume ratio (neutral - could be bullish or bearish breakout)
+            // Keep yellow/red for extreme values as warning
+            if (val > 3) return 'metric-extreme-high';
+            if (val > 2) return 'metric-high';
+            return 'neutral';
+        }
+
+        function getZScoreClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Positive z-score = high funding (overleveraged longs, bearish) -> red
+            // Negative z-score = negative funding (overleveraged shorts, bullish) -> green
+            if (val > 2) return 'metric-extreme-high negative';
+            if (val > 1.5) return 'metric-high negative';
+            if (val < -2) return 'metric-extreme-high positive';
+            if (val < -1.5) return 'metric-high positive';
+            return val > 0 ? 'negative' : (val < 0 ? 'positive' : 'neutral');
+        }
+
+        function getRatioClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Buy/Sell ratio: >2 = buying pressure (bullish) -> green
+            // <0.5 = selling pressure (bearish) -> red
+            if (val > 2) return 'metric-high positive';
+            if (val < 0.5) return 'metric-high negative';
+            return 'neutral';
+        }
+
+        function getImbalanceClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            // Positive = more bids (bullish) -> green
+            // Negative = more asks (bearish) -> red
+            if (val > 30) return 'metric-extreme-high positive';
+            if (val > 20) return 'metric-high positive';
+            if (val < -30) return 'metric-extreme-high negative';
+            if (val < -20) return 'metric-high negative';
+            return val > 0 ? 'positive' : (val < 0 ? 'negative' : 'neutral');
+        }
+
+        function getScoreClass(val) {
+            if (val === null || val === undefined) return 'neutral';
+            if (val > 2) return 'metric-extreme-high';
+            if (val > 1) return 'metric-high';
+            return 'neutral';
+        }
+
+        // Tooltip positioning for fixed position
+        function initTooltips() {
+            document.querySelectorAll('.tooltip').forEach(tooltip => {
+                tooltip.addEventListener('mouseenter', function(e) {
+                    const tooltipText = this.querySelector('.tooltiptext');
+                    if (tooltipText) {
+                        const rect = this.getBoundingClientRect();
+                        tooltipText.style.left = rect.left + rect.width / 2 + 'px';
+                        tooltipText.style.top = rect.top + 'px';
+                    }
+                });
+            });
+        }
+
+        // Initialize stat card filter handlers
+        function initStatCardFilters() {
+            document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
+                card.addEventListener('click', () => {
+                    const filter = card.dataset.filter;
+
+                    // Update filter state
+                    currentFilter = filter;
+
+                    // Update active class
+                    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+
+                    // Apply filter
+                    filterData();
+                });
+            });
+        }
+
+        // Event listeners
+        document.getElementById('interval').addEventListener('change', loadData);
+        document.getElementById('search').addEventListener('input', filterData);
+
+        // Initial load
+        initSortHandlers();
+        initTooltips();
+        initStatCardFilters();
+        loadData();
+        loadStats();
+
+        // Start auto-refresh (30 seconds)
+        autoRefreshInterval = setInterval(() => {
+            loadData();
+            loadStats();
+        }, 30000);
+
+        // ============ CHARTING FUNCTIONALITY ============
+
+        let chart = null;
+        let chartData = {};
+        let currentChartCoin = null;
+        let currentChartInterval = '5m';
+        let currentLookbackHours = 48; // Default for 5m
+        let comparisonTokens = [];
+        let currentChartView = 'metrics'; // 'metrics' or 'orderbook'
+        let currentOrderbookMode = 'heatmap'; // 'heatmap', 'depth', or 'imbalance'
+        let orderbookData = null;
+        let currentDepthIndex = 0;
+        let depthAnimationInterval = null;
+        let depthLevels = 5; // 5 (zoomed in) or 10 (zoomed out)
+        const priceTickSizes = [0.000001, 0.00001, 0.0001, 0.001];
+        let currentTickIndex = null; // null = auto-detect based on range
+
+        // Retention mapping
+        const retentionHours = {
+            '5m': 48,   // 2 days
+            '1h': 168,  // 7 days
+            '4h': 2160  // 90 days
+        };
+
+        // Open chart modal
+        function openChart(coin) {
+            console.log('openChart called with coin:', coin);
+            currentChartCoin = coin;
+            comparisonTokens = [coin];
+            document.getElementById('chart-modal-title').textContent = `${coin} - Chart`;
+            const modal = document.getElementById('chart-modal');
+            console.log('Modal element:', modal);
+            modal.style.display = 'block';
+            console.log('Modal display set to block');
+            updateTokenTags();
+
+            // Check which view is currently active and load appropriate data
+            const isOrderbookActive = document.querySelector('[data-view="orderbook"]')?.classList.contains('active');
+
+            if (isOrderbookActive) {
+                currentChartView = 'orderbook';
+                loadOrderbookData();
+            } else {
+                currentChartView = 'metrics';
+                loadChartData();
+            }
+        }
+
+        // Close chart modal
+        function closeChart() {
+            document.getElementById('chart-modal').style.display = 'none';
+            if (chart) {
+                chart.remove();
+                chart = null;
+            }
+            chartData = {};
+        }
+
+        // Load chart data from API
+        async function loadChartData() {
+            document.getElementById('chart-loading').style.display = 'block';
+
+            try {
+                // Get selected metrics
+                const selectedMetrics = Array.from(document.querySelectorAll('#metric-selector input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+
+                if (selectedMetrics.length === 0) {
+                    throw new Error('Please select at least one metric');
+                }
+
+                // If only one token, fetch detailed data
+                if (comparisonTokens.length === 1) {
+                    const metricsParam = selectedMetrics.join(',');
+                    const response = await fetch(
+                        `/api/chart/${currentChartCoin}?interval=${currentChartInterval}&metrics=${metricsParam}&lookback_hours=${currentLookbackHours}`
+                    );
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    renderSingleTokenChart(data, selectedMetrics);
+                }
+                // If multiple tokens, use comparison mode (single metric)
+                else {
+                    const metric = selectedMetrics[0]; // Use first selected metric for comparison
+                    const coins = comparisonTokens.join(',');
+                    const response = await fetch(
+                        `/api/chart/compare?coins=${coins}&metric=${metric}&interval=${currentChartInterval}&lookback_hours=${currentLookbackHours}`
+                    );
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    renderComparisonChart(data, metric);
+                }
+
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+                document.getElementById('chart-loading').textContent = `Error: ${error.message}`;
+                setTimeout(() => {
+                    document.getElementById('chart-loading').style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Render chart for single token with multiple metrics
+        function renderSingleTokenChart(data, metrics) {
+            document.getElementById('chart-loading').style.display = 'none';
+
+            const chartDiv = document.getElementById('chart');
+
+            // Clear existing chart
+            if (chart) {
+                chart.remove();
+            }
+
+            // Metrics that should use left scale (price-related)
+            const leftScaleMetrics = ['price', 'open_interest'];
+
+            // Check which scales we need
+            const hasLeftMetrics = metrics.some(m => leftScaleMetrics.includes(m));
+            const hasRightMetrics = metrics.some(m => !leftScaleMetrics.includes(m));
+
+            // Create new chart with multiple price scales
+            chart = LightweightCharts.createChart(chartDiv, {
+                layout: {
+                    background: { color: '#121212' },
+                    textColor: 'rgba(255, 255, 255, 0.87)',
+                },
+                grid: {
+                    vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                },
+                timeScale: {
+                    timeVisible: true,
+                    secondsVisible: false,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    timezone: 'America/New_York',
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    visible: hasRightMetrics,
+                    minimumWidth: 60,
+                },
+                leftPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    visible: hasLeftMetrics,
+                    minimumWidth: 60,
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                },
+            });
+
+            // Color palette for different metrics
+            const colors = ['#9FA8DA', '#F48FB1', '#80CBC4', '#FFE082', '#CE93D8', '#A5D6A7', '#FFAB91', '#90CAF9'];
+
+            // Add series for each metric
+            metrics.forEach((metric, index) => {
+                const seriesData = data.data.map(point => {
+                    // Convert UTC timestamp to EST by subtracting 5 hours (18000 seconds)
+                    // Note: This doesn't account for DST, but provides consistent EST offset
+                    const utcTime = Math.floor(point.timestamp / 1000);
+                    const estTime = utcTime - (5 * 3600);
+                    return {
+                        time: estTime,
+                        value: point[metric] || 0
+                    };
+                });
+
+                const useLeftScale = leftScaleMetrics.includes(metric);
+
+                const series = chart.addLineSeries({
+                    color: colors[index % colors.length],
+                    lineWidth: 2,
+                    title: metric,
+                    priceScaleId: useLeftScale ? 'left' : 'right',
+                });
+
+                series.setData(seriesData);
+            });
+
+            // Fit content
+            chart.timeScale().fitContent();
+        }
+
+        // Render comparison chart for multiple tokens
+        function renderComparisonChart(data, metric) {
+            document.getElementById('chart-loading').style.display = 'none';
+
+            const chartDiv = document.getElementById('chart');
+
+            // Clear existing chart
+            if (chart) {
+                chart.remove();
+            }
+
+            // Create new chart
+            chart = LightweightCharts.createChart(chartDiv, {
+                layout: {
+                    background: { color: '#121212' },
+                    textColor: 'rgba(255, 255, 255, 0.87)',
+                },
+                grid: {
+                    vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                },
+                timeScale: {
+                    timeVisible: true,
+                    secondsVisible: false,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    timezone: 'America/New_York',
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                },
+            });
+
+            // Color palette for different tokens
+            const colors = ['#9FA8DA', '#F48FB1', '#80CBC4', '#FFE082', '#CE93D8', '#A5D6A7', '#FFAB91', '#90CAF9'];
+
+            // Add series for each token
+            Object.keys(data.data).forEach((coin, index) => {
+                const seriesData = data.data[coin].map(point => {
+                    // Convert UTC timestamp to EST by subtracting 5 hours (18000 seconds)
+                    const utcTime = Math.floor(point.timestamp / 1000);
+                    const estTime = utcTime - (5 * 3600);
+                    return {
+                        time: estTime,
+                        value: point.value || 0
+                    };
+                });
+
+                const series = chart.addLineSeries({
+                    color: colors[index % colors.length],
+                    lineWidth: 2,
+                    title: coin,
+                });
+
+                series.setData(seriesData);
+            });
+
+            // Fit content
+            chart.timeScale().fitContent();
+        }
+
+        // Token comparison management
+        function updateTokenTags() {
+            const tagsContainer = document.getElementById('token-tags');
+            tagsContainer.innerHTML = '';
+
+            comparisonTokens.forEach(token => {
+                if (token !== currentChartCoin) {
+                    const tag = document.createElement('div');
+                    tag.className = 'token-tag';
+                    tag.innerHTML = `
+                        ${token}
+                        <span class="token-tag-remove" data-token="${token}">×</span>
+                    `;
+                    tagsContainer.appendChild(tag);
+                }
+            });
+        }
+
+        function addComparisonToken(token) {
+            token = token.toUpperCase().trim();
+            if (token && !comparisonTokens.includes(token)) {
+                comparisonTokens.push(token);
+                updateTokenTags();
+                loadChartData();
+            }
+        }
+
+        function removeComparisonToken(token) {
+            comparisonTokens = comparisonTokens.filter(t => t !== token);
+            if (comparisonTokens.length === 0) {
+                comparisonTokens = [currentChartCoin];
+            }
+            updateTokenTags();
+            loadChartData();
+        }
+
+        // ============ ORDERBOOK DEPTH FUNCTIONALITY ============
+
+        // Global variables for heatmap data
+        let heatmapData = null;
+
+        // Load orderbook depth data
+        async function loadOrderbookData() {
+            document.getElementById('chart-loading').style.display = 'flex';
+
+            try {
+                console.log('Loading orderbook data for:', currentChartCoin);
+
+                // Load appropriate data based on mode
+                if (currentOrderbookMode === 'heatmap') {
+                    await loadHeatmapData();
+                } else {
+                    const response = await fetch(
+                        `/api/orderbook-depth/${currentChartCoin}?interval=${currentChartInterval}&lookback_hours=${currentLookbackHours}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    orderbookData = await response.json();
+                    console.log('Received orderbook data:', orderbookData.coin, 'Data points:', orderbookData.data?.length);
+                    console.log('First snapshot:', orderbookData.data?.[0]);
+
+                    // Reset depth index to LAST (newest) when loading new coin data
+                    currentDepthIndex = orderbookData.data.length - 1;
+
+                    if (currentOrderbookMode === 'depth') {
+                        renderDepthChart();
+                    } else {
+                        renderImbalanceTimeline();
+                    }
+                }
+
+                document.getElementById('chart-loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading orderbook data:', error);
+                document.getElementById('chart-loading').innerHTML = `<div style="color: #EF9A9A;">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Load liquidity heatmap data
+        async function loadHeatmapData() {
+            try {
+                console.log('Loading heatmap data for:', currentChartCoin);
+                const response = await fetch(
+                    `/api/orderbook-heatmap/${currentChartCoin}?interval=${currentChartInterval}&lookback_hours=${currentLookbackHours}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                heatmapData = await response.json();
+                console.log('Received heatmap data:', heatmapData);
+                renderLiquidityHeatmap();
+            } catch (error) {
+                console.error('Error loading heatmap data:', error);
+                throw error;
+            }
+        }
+
+        // Polyfill for roundRect (non-standard)
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                this.closePath();
+            };
+        }
+
+        // Shared throttled redraw
+        let rafId = null;
+        function throttledRedraw(drawFn) {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(drawFn);
+        }
+
+        // Draw base chart (grids, areas, axes, labels) — no events
+        function drawBase(ctx, width, height, snapshot, maxDepth, bidLevels, askLevels, minPrice, maxPrice, tickSize, chartWidth, chartHeight, marginLeft, marginRight, marginTop, marginBottom) {
+            // Clear
+            ctx.fillStyle = '#121212';
+            ctx.fillRect(0, 0, width, height);
+
+            const priceToX = (price) => marginLeft + ((price - minPrice) / (maxPrice - minPrice)) * chartWidth;
+            const depthToY = (depth) => height - marginBottom - (depth / maxDepth) * chartHeight;
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = marginTop + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(marginLeft, y);
+                ctx.lineTo(width - marginRight, y);
+                ctx.stroke();
+            }
+
+            // Draw bid area and stroke
+            if (bidLevels.length > 1) {
+                ctx.fillStyle = 'rgba(165, 214, 167, 0.4)';
+                ctx.beginPath();
+                ctx.moveTo(priceToX(bidLevels[0].price), height - marginBottom);
+                bidLevels.forEach(level => ctx.lineTo(priceToX(level.price), depthToY(level.depth)));
+                ctx.lineTo(priceToX(bidLevels[bidLevels.length - 1].price), height - marginBottom);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = '#A5D6A7';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(priceToX(bidLevels[0].price), depthToY(bidLevels[0].depth));
+                for (let i = 1; i < bidLevels.length; i++) {
+                    ctx.lineTo(priceToX(bidLevels[i].price), depthToY(bidLevels[i].depth));
+                }
+                ctx.stroke();
+            }
+
+            // Draw ask area and stroke
+            if (askLevels.length > 1) {
+                ctx.fillStyle = 'rgba(239, 154, 154, 0.4)';
+                ctx.beginPath();
+                ctx.moveTo(priceToX(askLevels[0].price), height - marginBottom);
+                askLevels.forEach(level => ctx.lineTo(priceToX(level.price), depthToY(level.depth)));
+                ctx.lineTo(priceToX(askLevels[askLevels.length - 1].price), height - marginBottom);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = '#EF9A9A';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(priceToX(askLevels[0].price), depthToY(askLevels[0].depth));
+                for (let i = 1; i < askLevels.length; i++) {
+                    ctx.lineTo(priceToX(askLevels[i].price), depthToY(askLevels[i].depth));
+                }
+                ctx.stroke();
+            }
+
+            // Draw axes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(marginLeft, marginTop);
+            ctx.lineTo(marginLeft, height - marginBottom);
+            ctx.lineTo(width - marginRight, height - marginBottom);
+            ctx.stroke();
+
+            // X-axis title
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Price', width / 2, height - 5);
+
+            // X-axis labels
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.87)';
+            ctx.font = '13px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const labelY = height - marginBottom + 22;
+            const startTick = Math.ceil(minPrice / tickSize) * tickSize;
+            const endTick = Math.floor(maxPrice / tickSize) * tickSize;
+            const labelStep = Math.max(1, Math.floor((endTick - startTick) / (tickSize * 5)));
+            for (let tick = startTick; tick <= endTick; tick += tickSize * labelStep) {
+                const x = priceToX(tick);
+                if (x >= marginLeft && x <= width - marginRight) {
+                    let decimals = tickSize < 0.00001 ? 8 : tickSize < 0.0001 ? 6 : tickSize < 0.001 ? 5 : tickSize < 0.01 ? 4 : tickSize < 0.1 ? 3 : tickSize < 1 ? 2 : 0;
+                    const formattedPrice = tick.toFixed(decimals);
+                    ctx.fillText(formattedPrice, x, labelY);
+                }
+            }
+
+            // Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 5; i++) {
+                const depth = (maxDepth / 5) * i;
+                const y = depthToY(depth);
+                ctx.fillText(depth.toLocaleString('en-US'), marginLeft - 10, y);
+            }
+
+            // Side labels
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#A5D6A7';
+            ctx.fillText('Bids', marginLeft + 10, marginTop + 20);
+            ctx.fillStyle = '#EF9A9A';
+            ctx.fillText('Asks', marginLeft + 60, marginTop + 20);
+        }
+
+        // Draw hover overlay (crosshair, point, tooltip) on top of base
+        function drawOverlay(ctx, width, height, mouseX, mouseY, nearestLevel, side, priceToX, depthToY, marginLeft, marginRight, marginTop, marginBottom) {
+            if (!nearestLevel) return;
+
+            const x = priceToX(nearestLevel.price);
+            const y = depthToY(nearestLevel.depth);
+
+            // Crosshair
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x, marginTop);
+            ctx.lineTo(x, height - marginBottom);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(marginLeft, y);
+            ctx.lineTo(width - marginRight, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Point
+            ctx.fillStyle = side === 'Bid' ? '#A5D6A7' : '#EF9A9A';
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tooltip (clamped)
+            let tooltipX = mouseX + 15;
+            const tooltipY = Math.max(marginTop + 10, mouseY - 15);
+            const tooltipWidth = 150;
+            const tooltipHeight = 60;
+            if (tooltipX + tooltipWidth > width - 10) tooltipX = mouseX - tooltipWidth - 15;
+            tooltipX = Math.max(marginLeft + 10, tooltipX);
+
+            ctx.fillStyle = 'rgba(30, 30, 30, 0.95)';
+            ctx.strokeStyle = side === 'Bid' ? '#A5D6A7' : '#EF9A9A';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.87)';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+
+            const price = nearestLevel.price;
+            let formattedPrice = price >= 1000 ? price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) :
+                                 price >= 1 ? price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 4}) :
+                                 price >= 0.01 ? price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 6}) :
+                                 price.toLocaleString('en-US', {minimumFractionDigits: 6, maximumFractionDigits: 8});
+
+            ctx.fillText(`${side}`, tooltipX + 10, tooltipY + 18);
+            ctx.fillText(`Price: $${formattedPrice}`, tooltipX + 10, tooltipY + 35);
+            ctx.fillText(`Depth: ${nearestLevel.depth.toLocaleString('en-US', {maximumFractionDigits: 2})}`, tooltipX + 10, tooltipY + 52);
+        }
+
+        // Render depth chart for a specific snapshot using Canvas
+        function renderDepthChart() {
+            if (!orderbookData || !orderbookData.data || orderbookData.data.length === 0) {
+                return;
+            }
+
+            // Hide TradingView chart, show canvas
+            document.getElementById('chart').style.display = 'none';
+            const canvas = document.getElementById('depth-canvas');
+            canvas.style.display = 'block';
+
+            // Show slider
+            const sliderContainer = document.getElementById('depth-slider-container');
+            sliderContainer.style.display = 'block';
+            const slider = document.getElementById('depth-slider');
+            slider.max = orderbookData.data.length - 1;
+            slider.value = currentDepthIndex;
+
+            // Get snapshot at current index
+            const snapshot = orderbookData.data[currentDepthIndex];
+
+            // Update timestamp and mid price display (robust: find actual best)
+            const date = new Date(snapshot.timestamp);
+            document.getElementById('depth-timestamp').textContent = date.toLocaleTimeString();
+
+            let midPrice = null;
+            if (snapshot.bids.length > 0 && snapshot.asks.length > 0) {
+                const bestBidPrice = Math.max(...snapshot.bids.map(b => b.price));
+                const bestAskPrice = Math.min(...snapshot.asks.map(a => a.price));
+                midPrice = (bestBidPrice + bestAskPrice) / 2;
+                document.getElementById('depth-mid-price').textContent = `Mid: ${midPrice.toFixed(6)}`;
+            }
+
+            // Calculate dynamic canvas dimensions based on available space
+            const chartContainer = document.querySelector('.chart-container');
+            const containerRect = chartContainer.getBoundingClientRect();
+            const horizontalPadding = 40;
+            const availableWidth = Math.floor(containerRect.width - horizontalPadding);
+            const sliderHeight = 60;
+            const dynamicHeight = Math.max(400, chartContainer.clientHeight - sliderHeight);
+            const dynamicWidth = availableWidth;
+
+            // Draw on canvas with high DPI scaling for crisp rendering
+            const dpr = window.devicePixelRatio || 1;
+            const ctx = canvas.getContext('2d');
+            canvas.width = dynamicWidth * dpr;
+            canvas.height = dynamicHeight * dpr;
+            canvas.style.width = `${dynamicWidth}px`;
+            canvas.style.height = `${dynamicHeight}px`;
+            ctx.scale(dpr, dpr);
+            const width = dynamicWidth;
+            const height = dynamicHeight;
+
+            // Prepare data (once)
+            // Bids: cumulative from worst (low) to best (high)
+            const sortedBids = snapshot.bids.slice().sort((a, b) => a.price - b.price).slice(-depthLevels);
+            const totalBidDepth = sortedBids.reduce((sum, l) => sum + l.size, 0);
+            const bidLevels = [];
+            let cumBelow = 0;
+            for (let i = 0; i < sortedBids.length; i++) {
+                const depth = totalBidDepth - cumBelow;
+                bidLevels.push({ price: sortedBids[i].price, depth });
+                cumBelow += sortedBids[i].size;
+            }
+            if (bidLevels.length > 0) {
+                bidLevels.unshift({ price: bidLevels[0].price * 0.9995, depth: totalBidDepth });
+            }
+
+            // Asks: cumulative from best (low) to worst (high)
+            const sortedAsks = snapshot.asks.slice().sort((a, b) => a.price - b.price).slice(0, depthLevels);
+            const totalAskDepth = sortedAsks.reduce((sum, l) => sum + l.size, 0);
+            const askLevels = [];
+            let cumulativeAskDepth = 0;
+            for (let i = 0; i < sortedAsks.length; i++) {
+                cumulativeAskDepth += sortedAsks[i].size;
+                askLevels.push({ price: sortedAsks[i].price, depth: cumulativeAskDepth });
+            }
+            if (askLevels.length > 0) {
+                askLevels.push({ price: askLevels[askLevels.length - 1].price * 1.0005, depth: totalAskDepth });
+            }
+
+            if (bidLevels.length === 0 && askLevels.length === 0) return;
+
+            // Price range and ticks
+            const allPrices = [...bidLevels.map(l => l.price), ...askLevels.map(l => l.price)];
+            const fullMinPrice = Math.min(...allPrices);
+            const fullMaxPrice = Math.max(...allPrices);
+            const actualMidPrice = (fullMinPrice + fullMaxPrice) / 2;
+            const fullRange = fullMaxPrice - fullMinPrice;
+
+            if (currentTickIndex === null) {
+                for (let i = 0; i < priceTickSizes.length; i++) {
+                    if (fullRange / priceTickSizes[i] <= 100) {
+                        currentTickIndex = i;
+                        break;
+                    }
+                }
+                if (currentTickIndex === null) currentTickIndex = priceTickSizes.length - 1;
+            }
+            const tickSize = priceTickSizes[currentTickIndex];
+            const numTicks = 10;
+            const minPrice = actualMidPrice - (tickSize * numTicks);
+            const maxPrice = actualMidPrice + (tickSize * numTicks);
+            const maxDepth = Math.max(totalBidDepth, totalAskDepth || 0, 1);
+
+            // Margins and helpers
+            const marginLeft = 60, marginRight = 20, marginTop = 20, marginBottom = 60;
+            const chartWidth = width - marginLeft - marginRight;
+            const chartHeight = height - marginTop - marginBottom;
+            const priceToX = (price) => marginLeft + ((price - minPrice) / (maxPrice - minPrice)) * chartWidth;
+            const depthToY = (depth) => height - marginBottom - (depth / maxDepth) * chartHeight;
+
+            // Initial base draw
+            drawBase(ctx, width, height, snapshot, maxDepth, bidLevels, askLevels, minPrice, maxPrice, tickSize, chartWidth, chartHeight, marginLeft, marginRight, marginTop, marginBottom);
+
+            // Hover functionality (throttled)
+            const handleMouseMove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                if (mouseX < marginLeft || mouseX > width - marginRight || mouseY < marginTop || mouseY > height - marginBottom) {
+                    canvas.style.cursor = 'default';
+                    throttledRedraw(() => drawBase(ctx, width, height, snapshot, maxDepth, bidLevels, askLevels, minPrice, maxPrice, tickSize, chartWidth, chartHeight, marginLeft, marginRight, marginTop, marginBottom));
+                    return;
+                }
+
+                canvas.style.cursor = 'crosshair';
+                const priceAtMouse = minPrice + ((mouseX - marginLeft) / chartWidth) * (maxPrice - minPrice);
+
+                let nearestLevel = null;
+                let nearestDist = Infinity;
+                let side = '';
+
+                bidLevels.forEach(level => {
+                    const dist = Math.abs(level.price - priceAtMouse);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearestLevel = level;
+                        side = 'Bid';
+                    }
+                });
+
+                askLevels.forEach(level => {
+                    const dist = Math.abs(level.price - priceAtMouse);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearestLevel = level;
+                        side = 'Ask';
+                    }
+                });
+
+                throttledRedraw(() => {
+                    drawBase(ctx, width, height, snapshot, maxDepth, bidLevels, askLevels, minPrice, maxPrice, tickSize, chartWidth, chartHeight, marginLeft, marginRight, marginTop, marginBottom);
+                    drawOverlay(ctx, width, height, mouseX, mouseY, nearestLevel, side, priceToX, depthToY, marginLeft, marginRight, marginTop, marginBottom);
+                });
+            };
+
+            const handleMouseLeave = () => {
+                canvas.style.cursor = 'default';
+                throttledRedraw(() => drawBase(ctx, width, height, snapshot, maxDepth, bidLevels, askLevels, minPrice, maxPrice, tickSize, chartWidth, chartHeight, marginLeft, marginRight, marginTop, marginBottom));
+            };
+
+            canvas.onmousemove = handleMouseMove;
+            canvas.onmouseleave = handleMouseLeave;
+        }
+
+        // Render imbalance timeline
+        function renderImbalanceTimeline() {
+            if (!orderbookData || !orderbookData.data || orderbookData.data.length === 0) {
+                return;
+            }
+
+            // Show TradingView chart, hide Canvas
+            document.getElementById('chart').style.display = 'block';
+            document.getElementById('depth-canvas').style.display = 'none';
+
+            // Hide slider for timeline view
+            document.getElementById('depth-slider-container').style.display = 'none';
+
+            // Calculate imbalance for each snapshot
+            const imbalanceData = orderbookData.data.map(snapshot => {
+                const totalBids = snapshot.bids.reduce((sum, level) => sum + level.size, 0);
+                const totalAsks = snapshot.asks.reduce((sum, level) => sum + level.size, 0);
+                const total = totalBids + totalAsks;
+                const imbalance = total > 0 ? ((totalBids - totalAsks) / total) * 100 : 0;
+
+                // Convert UTC timestamp to EST
+                const utcTime = Math.floor(snapshot.timestamp / 1000);
+                const estTime = utcTime - (5 * 3600);
+
+                return {
+                    time: estTime,
+                    value: imbalance
+                };
+            });
+
+            // Clear existing chart
+            const chartDiv = document.getElementById('chart');
+            if (chart) {
+                chart.remove();
+            }
+
+            // Create timeline chart
+            chart = LightweightCharts.createChart(chartDiv, {
+                layout: {
+                    background: { color: '#121212' },
+                    textColor: 'rgba(255, 255, 255, 0.87)',
+                },
+                grid: {
+                    vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                },
+                timeScale: {
+                    timeVisible: true,
+                    secondsVisible: false,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    timezone: 'America/New_York',
+                },
+                rightPriceScale: {
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    visible: true,
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                },
+            });
+
+            // Add line series for imbalance
+            const imbalanceSeries = chart.addLineSeries({
+                color: '#9FA8DA',
+                lineWidth: 2,
+                title: 'Depth Imbalance %'
+            });
+            imbalanceSeries.setData(imbalanceData);
+
+            // Add zero line as reference
+            const zeroLineSeries = chart.addLineSeries({
+                color: 'rgba(255, 255, 255, 0.2)',
+                lineWidth: 1,
+                lineStyle: 2, // Dashed
+                priceLineVisible: false,
+            });
+            zeroLineSeries.setData(imbalanceData.map(d => ({ time: d.time, value: 0 })));
+
+            chart.timeScale().fitContent();
+        }
+
+        // Render liquidity heatmap
+        function renderLiquidityHeatmap() {
+            if (!heatmapData || !heatmapData.timestamps || heatmapData.timestamps.length === 0) {
+                console.error('No heatmap data available');
+                return;
+            }
+
+            // Hide LightweightCharts div, show canvas
+            document.getElementById('chart').style.display = 'none';
+            const canvas = document.getElementById('depth-canvas');
+            canvas.style.display = 'block';
+            document.getElementById('depth-slider-container').style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+
+            // Set canvas size
+            const width = container.clientWidth;
+            const height = container.clientHeight - 60; // Leave space for controls
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.scale(dpr, dpr);
+
+            // Margins
+            const marginLeft = 60;
+            const marginRight = 80;
+            const marginTop = 40;
+            const marginBottom = 50;
+            const chartWidth = width - marginLeft - marginRight;
+            const chartHeight = height - marginTop - marginBottom;
+
+            // Data dimensions
+            const numTimestamps = heatmapData.timestamps.length;
+            const numPriceLevels = heatmapData.price_levels.length;
+            const cellWidth = chartWidth / numTimestamps;
+            const cellHeight = chartHeight / numPriceLevels;
+
+            // Find max depth for color scaling
+            let maxBidDepth = 0;
+            let maxAskDepth = 0;
+            heatmapData.bid_depths.forEach(snapshot => {
+                snapshot.forEach(depth => {
+                    maxBidDepth = Math.max(maxBidDepth, depth);
+                });
+            });
+            heatmapData.ask_depths.forEach(snapshot => {
+                snapshot.forEach(depth => {
+                    maxAskDepth = Math.max(maxAskDepth, depth);
+                });
+            });
+
+            // Clear canvas
+            ctx.fillStyle = '#121212';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw title
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${currentChartCoin} Liquidity Heatmap - ${currentChartInterval}`, width / 2, 20);
+
+            // Helper function to get color for depth
+            function getDepthColor(depth, maxDepth, isBid) {
+                if (depth === 0) return 'rgba(30, 30, 30, 1)';
+                const intensity = Math.min(depth / maxDepth, 1);
+                if (isBid) {
+                    // Green for bids
+                    return `rgba(76, 175, 80, ${0.3 + intensity * 0.7})`;
+                } else {
+                    // Red for asks
+                    return `rgba(244, 67, 54, ${0.3 + intensity * 0.7})`;
+                }
+            }
+
+            // Draw mid price line (horizontal)
+            const midPriceIndex = heatmapData.price_levels.findIndex(p => p >= heatmapData.avg_mid_price);
+            if (midPriceIndex >= 0) {
+                const midY = marginTop + midPriceIndex * cellHeight;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(marginLeft, midY);
+                ctx.lineTo(marginLeft + chartWidth, midY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw heatmap cells
+            for (let t = 0; t < numTimestamps; t++) {
+                const x = marginLeft + t * cellWidth;
+
+                for (let p = 0; p < numPriceLevels; p++) {
+                    const y = marginTop + p * cellHeight;
+                    const priceLevel = heatmapData.price_levels[p];
+
+                    // Determine if this price is bid or ask territory
+                    const isBid = priceLevel < heatmapData.avg_mid_price;
+                    const depth = isBid ? heatmapData.bid_depths[t][p] : heatmapData.ask_depths[t][p];
+                    const maxDepth = isBid ? maxBidDepth : maxAskDepth;
+
+                    ctx.fillStyle = getDepthColor(depth, maxDepth, isBid);
+                    ctx.fillRect(x, y, cellWidth, cellHeight);
+                }
+            }
+
+            // Draw Y-axis (price levels)
+            ctx.fillStyle = '#B0BEC5';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            // Show price labels at intervals
+            const priceSteps = 10;
+            for (let i = 0; i < priceSteps; i++) {
+                const priceIndex = Math.floor(i * numPriceLevels / priceSteps);
+                const price = heatmapData.price_levels[priceIndex];
+                const y = marginTop + priceIndex * cellHeight;
+                ctx.fillText(price.toFixed(4), marginLeft - 5, y);
+            }
+
+            // Draw X-axis (time)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Show time labels at intervals
+            const timeSteps = Math.min(8, numTimestamps);
+            for (let i = 0; i < timeSteps; i++) {
+                const timeIndex = Math.floor(i * numTimestamps / timeSteps);
+                const timestamp = heatmapData.timestamps[timeIndex];
+                const date = new Date(timestamp);
+                const timeStr = date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/New_York'
+                });
+                const x = marginLeft + timeIndex * cellWidth;
+                ctx.fillText(timeStr, x, marginTop + chartHeight + 5);
+            }
+
+            // Draw legend
+            const legendX = marginLeft + chartWidth + 10;
+            const legendY = marginTop + 20;
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('Depth', legendX, legendY - 10);
+
+            // Bid legend
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.8)';
+            ctx.fillRect(legendX, legendY + 10, 15, 15);
+            ctx.fillStyle = '#B0BEC5';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('Bids', legendX + 20, legendY + 17);
+
+            // Ask legend
+            ctx.fillStyle = 'rgba(244, 67, 54, 0.8)';
+            ctx.fillRect(legendX, legendY + 35, 15, 15);
+            ctx.fillStyle = '#B0BEC5';
+            ctx.fillText('Asks', legendX + 20, legendY + 42);
+
+            // Create CSS tooltip element
+            let tooltipDiv = document.getElementById('heatmap-tooltip');
+            if (!tooltipDiv) {
+                tooltipDiv = document.createElement('div');
+                tooltipDiv.id = 'heatmap-tooltip';
+                tooltipDiv.style.cssText = `
+                    position: absolute;
+                    background: rgba(0, 0, 0, 0.9);
+                    color: white;
+                    padding: 6px 10px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    pointer-events: none;
+                    z-index: 10000;
+                    white-space: nowrap;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    display: none;
+                `;
+                document.body.appendChild(tooltipDiv);
+            }
+
+            function handleMouseMove(e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // Check if mouse is in chart area
+                if (mouseX >= marginLeft && mouseX <= marginLeft + chartWidth &&
+                    mouseY >= marginTop && mouseY <= marginTop + chartHeight) {
+
+                    const tIndex = Math.floor((mouseX - marginLeft) / cellWidth);
+                    const pIndex = Math.floor((mouseY - marginTop) / cellHeight);
+
+                    if (tIndex >= 0 && tIndex < numTimestamps && pIndex >= 0 && pIndex < numPriceLevels) {
+                        const timestamp = heatmapData.timestamps[tIndex];
+                        const priceLevel = heatmapData.price_levels[pIndex];
+                        const isBid = priceLevel < heatmapData.avg_mid_price;
+                        const depth = isBid ? heatmapData.bid_depths[tIndex][pIndex] : heatmapData.ask_depths[tIndex][pIndex];
+
+                        const date = new Date(timestamp);
+                        const timeStr = date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZone: 'America/New_York'
+                        });
+
+                        const tooltipText = `${timeStr} | $${priceLevel.toFixed(4)} | ${isBid ? 'Bid' : 'Ask'}: ${depth.toFixed(2)}`;
+
+                        tooltipDiv.textContent = tooltipText;
+                        tooltipDiv.style.display = 'block';
+                        tooltipDiv.style.left = (e.clientX + 10) + 'px';
+                        tooltipDiv.style.top = (e.clientY - 30) + 'px';
+                    } else {
+                        tooltipDiv.style.display = 'none';
+                    }
+                } else {
+                    tooltipDiv.style.display = 'none';
+                }
+            }
+
+            // Add event listeners
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseleave', () => {
+                tooltipDiv.style.display = 'none';
+            });
+        }
+
+        // Depth slider control
+        document.getElementById('depth-slider').addEventListener('input', (e) => {
+            currentDepthIndex = parseInt(e.target.value);
+            renderDepthChart();
+        });
+
+        // Depth zoom toggle button
+        document.getElementById('depth-zoom-btn').addEventListener('click', () => {
+            depthLevels = depthLevels === 5 ? 10 : 5;
+            document.getElementById('depth-zoom-btn').textContent = `${depthLevels} Levels`;
+            renderDepthChart();
+        });
+
+        // Price zoom in button - decrease tick size (finer granularity)
+        document.getElementById('price-zoom-in-btn').addEventListener('click', () => {
+            if (currentTickIndex === null) currentTickIndex = priceTickSizes.length - 1;
+            if (currentTickIndex > 0) {
+                currentTickIndex--;
+                renderDepthChart();
+            }
+        });
+
+        // Price zoom out button - increase tick size (coarser granularity)
+        document.getElementById('price-zoom-out-btn').addEventListener('click', () => {
+            if (currentTickIndex === null) currentTickIndex = 0;
+            if (currentTickIndex < priceTickSizes.length - 1) {
+                currentTickIndex++;
+                renderDepthChart();
+            }
+        });
+
+        // Depth play/pause button
+        let isPlaying = false;
+        document.getElementById('depth-play-btn').addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('depth-play-btn');
+
+            if (isPlaying) {
+                btn.textContent = '⏸ Pause';
+                depthAnimationInterval = setInterval(() => {
+                    if (currentDepthIndex < orderbookData.data.length - 1) {
+                        currentDepthIndex++;
+                        document.getElementById('depth-slider').value = currentDepthIndex;
+                        renderDepthChart();
+                    } else {
+                        // Reset to beginning
+                        currentDepthIndex = 0;
+                        document.getElementById('depth-slider').value = currentDepthIndex;
+                        renderDepthChart();
+                    }
+                }, 500); // 500ms per frame
+            } else {
+                btn.textContent = '▶ Play';
+                if (depthAnimationInterval) {
+                    clearInterval(depthAnimationInterval);
+                    depthAnimationInterval = null;
+                }
+            }
+        });
+
+        // Event listeners for chart modal
+        document.getElementById('chart-close').addEventListener('click', closeChart);
+
+        document.getElementById('chart-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'chart-modal') {
+                closeChart();
+            }
+        });
+
+        // View toggle buttons (Metrics vs Orderbook)
+        document.querySelectorAll('[data-view]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentChartView = e.target.dataset.view;
+
+                // Show/hide appropriate controls
+                if (currentChartView === 'metrics') {
+                    document.getElementById('metrics-controls').style.display = '';
+                    document.getElementById('compare-controls').style.display = '';
+                    document.getElementById('orderbook-controls').style.display = 'none';
+                    document.getElementById('depth-slider-container').style.display = 'none';
+                    // Show TradingView chart, hide Canvas
+                    document.getElementById('chart').style.display = 'block';
+                    document.getElementById('depth-canvas').style.display = 'none';
+                    loadChartData();
+                } else {
+                    document.getElementById('metrics-controls').style.display = 'none';
+                    document.getElementById('compare-controls').style.display = 'none';
+                    document.getElementById('orderbook-controls').style.display = '';
+                    loadOrderbookData();
+                }
+            });
+        });
+
+        // Orderbook mode toggle buttons
+        document.querySelectorAll('[data-ob-mode]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-ob-mode]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentOrderbookMode = e.target.dataset.obMode;
+
+                if (currentOrderbookMode === 'heatmap') {
+                    loadHeatmapData().catch(err => {
+                        console.error('Failed to load heatmap:', err);
+                    });
+                } else if (currentOrderbookMode === 'depth') {
+                    document.getElementById('depth-slider-container').style.display = 'block';
+                    renderDepthChart();
+                } else {
+                    document.getElementById('depth-slider-container').style.display = 'none';
+                    renderImbalanceTimeline();
+                }
+            });
+        });
+
+        // Interval buttons (in chart modal)
+        document.querySelectorAll('[data-interval]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-interval]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentChartInterval = e.target.dataset.interval;
+                currentLookbackHours = retentionHours[currentChartInterval];
+
+                if (currentChartView === 'metrics') {
+                    loadChartData();
+                } else {
+                    loadOrderbookData();
+                }
+            });
+        });
+
+        // Metric checkboxes
+        document.getElementById('metric-selector').addEventListener('change', () => {
+            loadChartData();
+        });
+
+        // Token add button
+        document.getElementById('token-add-btn').addEventListener('click', () => {
+            const input = document.getElementById('token-add-input');
+            addComparisonToken(input.value);
+            input.value = '';
+        });
+
+        // Token add on Enter key
+        document.getElementById('token-add-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addComparisonToken(e.target.value);
+                e.target.value = '';
+            }
+        });
+
+        // Token tag remove
+        document.getElementById('token-tags').addEventListener('click', (e) => {
+            if (e.target.classList.contains('token-tag-remove')) {
+                removeComparisonToken(e.target.dataset.token);
+            }
+        });
+
+        // Clickable coin name handler
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('clickable-coin')) {
+                const coin = e.target.dataset.coin;
+                console.log('Opening chart for:', coin);
+                openChart(coin);
+            }
+        });
+    </script>
+</body>
+</html>

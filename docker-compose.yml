@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: hyperliquid_db
+    environment:
+      POSTGRES_DB: hyperliquid_data
+      POSTGRES_USER: hyperliquid
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hyperliquid"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  collector:
+    build: .
+    container_name: hyperliquid_collector
+    command: python collector.py
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: hyperliquid_data
+      DB_USER: hyperliquid
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  metrics_analyzer:
+    build: .
+    container_name: hyperliquid_metrics
+    command: >
+      sh -c "while true; do
+        python metrics_analyzer.py;
+        sleep 900;
+      done"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: hyperliquid_data
+      DB_USER: hyperliquid
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  api:
+    build: .
+    container_name: hyperliquid_api
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: hyperliquid_data
+      DB_USER: hyperliquid
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:

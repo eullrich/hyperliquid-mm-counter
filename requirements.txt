@@ -1,0 +1,11 @@
+requests
+psycopg2-binary
+hyperliquid-python-sdk
+dash
+plotly
+pandas
+numpy
+fastapi
+uvicorn[standard]
+tabulate
+websockets
