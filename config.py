@@ -22,12 +22,13 @@ Storage Efficiency:
 """
 
 # Database configuration
+import os
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'hyperliquid_data',
-    'user': 'ericullrich',  # Change this to your PostgreSQL username
-    'password': '',  # Add password if needed
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'port': int(os.getenv('DB_PORT', '5432')),
+    'database': os.getenv('DB_NAME', 'hyperliquid_data'),
+    'user': os.getenv('DB_USER', 'ericullrich'),
+    'password': os.getenv('DB_PASSWORD', ''),
 }
 
 # Hyperliquid WebSocket
@@ -81,7 +82,6 @@ MAX_RECONNECT_ATTEMPTS = 0  # 0 = infinite retries (survives extended power outa
 
 # Logging
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, WARNING, ERROR
-import os
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'collector.log')
 
 # Service name for monitoring
