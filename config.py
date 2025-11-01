@@ -81,7 +81,8 @@ MAX_RECONNECT_ATTEMPTS = 0  # 0 = infinite retries (survives extended power outa
 
 # Logging
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, WARNING, ERROR
-LOG_FILE = '/Users/ericullrich/Code/hedge-v4/logs/collector.log'
+import os
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'collector.log')
 
 # Service name for monitoring
 SERVICE_NAME = 'hyperliquid_collector'
