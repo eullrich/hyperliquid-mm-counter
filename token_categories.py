@@ -1,7 +1,7 @@
 """
 Token category mappings for Hyperliquid tokens
 Auto-generated from Hyperliquid frontend
-Last updated: 2025-10-30 10:55:16
+Last updated: 2025-11-01 18:13:26
 """
 
 # Category definitions
@@ -43,7 +43,7 @@ TOKEN_CATEGORIES = {
     ],
 
     'Pre-launch': [
-        'MEGA', 'MON',
+        'CC', 'MEGA', 'MON',
     ],
 
 
