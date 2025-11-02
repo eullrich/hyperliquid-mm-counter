@@ -16,7 +16,12 @@ from hyperliquid.utils import constants
 
 from db import Database, DataWriter
 from token_categories import get_token_category
-from metrics_analyzer import MetricsAnalyzer
+try:
+    from metrics_analyzer import MetricsAnalyzer
+    METRICS_ANALYZER_AVAILABLE = True
+except ImportError:
+    METRICS_ANALYZER_AVAILABLE = False
+    MetricsAnalyzer = None
 from config import (
     HYPERLIQUID_WS_URL, CANDLE_INTERVALS, ORDERBOOK_SNAPSHOT_INTERVAL,
     OI_UPDATE_INTERVAL, FUNDING_UPDATE_INTERVAL, FUNDING_REQUEST_DELAY,
@@ -43,7 +48,7 @@ class HyperliquidCollector:
     def __init__(self):
         self.db = Database()
         self.writer = DataWriter(self.db)
-        self.metrics_analyzer = MetricsAnalyzer(self.db)
+        self.metrics_analyzer = MetricsAnalyzer(self.db) if METRICS_ANALYZER_AVAILABLE else None
         self.info = None
         self.running = Event()
         self.tokens = []
@@ -402,14 +407,17 @@ class HyperliquidCollector:
             time.sleep(METRICS_UPDATE_INTERVAL)  # Wait 5 minutes before first computation
 
             try:
-                logger.info("Computing anomaly metrics for all tokens...")
-                start_time = time.time()
+                if self.metrics_analyzer:
+                    logger.info("Computing anomaly metrics for all tokens...")
+                    start_time = time.time()
 
-                # Compute metrics for all tokens across all intervals
-                self.metrics_analyzer.compute_all_metrics(self.tokens, CANDLE_INTERVALS)
+                    # Compute metrics for all tokens across all intervals
+                    self.metrics_analyzer.compute_all_metrics(self.tokens, CANDLE_INTERVALS)
 
-                elapsed = time.time() - start_time
-                logger.info(f"Metrics computation completed in {elapsed:.1f}s")
+                    elapsed = time.time() - start_time
+                    logger.info(f"Metrics computation completed in {elapsed:.1f}s")
+                else:
+                    logger.debug("Metrics analyzer disabled (running as separate service)")
 
             except Exception as e:
                 logger.error(f"Error computing metrics: {e}")
