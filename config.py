@@ -35,7 +35,7 @@ DB_CONFIG = {
 HYPERLIQUID_WS_URL = 'wss://api.hyperliquid.xyz/ws'
 
 # Intervals to collect (removed 1d to stay under 1000 WebSocket subscription limit)
-CANDLE_INTERVALS = ['5m', '1h', '4h']
+CANDLE_INTERVALS = ['15m', '1h', '4h']
 
 # How often to snapshot orderbook (seconds)
 ORDERBOOK_SNAPSHOT_INTERVAL = 60  # Every minute
@@ -65,10 +65,10 @@ METRICS_UPDATE_INTERVAL = 300  # Every 5 minutes (aligns with candle close)
 # Data pruning/retention settings
 PRUNING_INTERVAL = 86400  # Run pruning once per day (24 hours)
 RETENTION_DAYS = {
-    '5m': 2,      # Keep 5m candles for 2 days
+    '15m': 7,     # Keep 15m candles for 7 days
     '1h': 7,      # Keep 1h candles for 7 days
     '4h': 90,     # Keep 4h candles for 90 days
-    'orderbook': 2,   # Keep orderbook aligned with shortest candle interval
+    'orderbook': 7,   # Keep orderbook aligned with shortest candle interval
     'oi': 90,     # Keep open interest for 90 days
     'funding': 90 # Keep funding rates for 90 days
 }
