@@ -49,7 +49,7 @@ async def get_metrics(
     interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     anomaly_only: bool = Query(False),
     limit: int = Query(100, ge=1, le=500),
-    sort_by: str = Query("anomaly_score", regex="^(anomaly_score|price_change_pct|volume_ratio_to_avg|coin)$"),
+    sort_by: str = Query("obv_zscore", regex="^(obv_zscore|price_change_pct|volume_ratio_to_avg|coin|signal)$"),
     order: str = Query("desc", regex="^(asc|desc)$")
 ):
     """
