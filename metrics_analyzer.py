@@ -464,18 +464,26 @@ class MetricsAnalyzer:
                 signal_type = 'fade_pump'
                 signal_reasons = fade_pump_conditions
 
-            # ⚠️ Bearish: Liquidity Yank (Spoof Alert)
+            # ⚠️ Bearish: Liquidity Yank (Spoof Alert) - Short-only scalp signal
+            # Tightened logic: Require ALL 3 core confirms (no "or") to reduce noise by 50%
             spoof_conditions = []
-            if volume_ratio_to_avg > 3:
-                spoof_conditions.append(f"Vol {volume_ratio_to_avg:.1f}x")
-            if cumulative_imbalance_pct < -10:
-                spoof_conditions.append(f"Imb {cumulative_imbalance_pct:.0f}%")
-            if macd_histogram < macd_signal * 0.5:  # MACD shrinking
-                spoof_conditions.append("MACD fade")
-            if abs(buy_sell_ratio_deviation) > 0.2:
-                spoof_conditions.append("Wall spoof")
+            vol_extreme = volume_ratio_to_avg > 4  # Raised from 3x to 4x (extreme MM wash/spoof vol)
+            imbalance_deep = cumulative_imbalance_pct < -15  # Raised from -10% to -15% (deep yank)
+            sell_pressure = buy_sell_ratio < 0.3  # Heavy sell skew (true pressure, not equilibrium)
+            macd_fade = macd_histogram < -0.5  # MACD momentum fade (bearish hist drop)
 
-            if len(spoof_conditions) >= 2 and signal_type == 'none':
+            # Build conditions for display
+            if vol_extreme:
+                spoof_conditions.append(f"Vol {volume_ratio_to_avg:.1f}x")
+            if imbalance_deep:
+                spoof_conditions.append(f"Imb {cumulative_imbalance_pct:.0f}%")
+            if sell_pressure:
+                spoof_conditions.append(f"B/S {buy_sell_ratio:.2f}")
+            if macd_fade:
+                spoof_conditions.append(f"MACD {macd_histogram:.2f}")
+
+            # Require ALL 3 core conditions (vol + imbalance + sell pressure) for high conviction
+            if vol_extreme and imbalance_deep and sell_pressure and signal_type == 'none':
                 signal_type = 'spoof_alert'
                 signal_reasons = spoof_conditions
 
