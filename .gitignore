@@ -80,3 +80,6 @@ htmlcov/
 
 # macOS LaunchAgents (local dev only)
 *.plist
+
+# Droplet config (contains sensitive info)
+.droplet
