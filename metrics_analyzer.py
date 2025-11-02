@@ -535,8 +535,25 @@ class MetricsAnalyzer:
             logger.error(f"Error computing metrics for {coin} {interval}: {e}")
             return None
 
+    def _convert_numpy_to_python(self, metrics: Dict) -> Dict:
+        """Convert NumPy types to Python native types for PostgreSQL"""
+        converted = {}
+        for key, value in metrics.items():
+            if isinstance(value, (np.integer, np.floating)):
+                converted[key] = float(value) if isinstance(value, np.floating) else int(value)
+            elif isinstance(value, np.ndarray):
+                converted[key] = value.tolist()
+            elif pd.isna(value):
+                converted[key] = None
+            else:
+                converted[key] = value
+        return converted
+
     def save_metrics(self, metrics: Dict):
         """Save computed metrics to database"""
+        # Convert NumPy types to Python native types
+        metrics = self._convert_numpy_to_python(metrics)
+
         conn = self.db.get_connection()
         try:
             with conn.cursor() as cur:
