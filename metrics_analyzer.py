@@ -447,6 +447,29 @@ class MetricsAnalyzer:
                 signal_type = 'buy_dip'
                 signal_reasons = buy_dip_conditions
 
+            # 📈 Bullish: Imbalance Lead (Pre-Breakout)
+            # Catches early momentum before FOMO chase based on MM absorption patterns
+            imbalance_lead_conditions = []
+            imbalance_spike = cumulative_imbalance_pct > 15  # Positive spike (MM absorbing)
+            volume_confirm = volume_ratio_to_avg > 2.5  # Intent confirmation
+            momentum_building = macd_histogram > 0  # Bullish momentum
+            buy_pressure = buy_sell_ratio > 2.0  # Strong buy side
+
+            # Build conditions for display
+            if imbalance_spike:
+                imbalance_lead_conditions.append(f"Imb +{cumulative_imbalance_pct:.0f}%")
+            if volume_confirm:
+                imbalance_lead_conditions.append(f"Vol {volume_ratio_to_avg:.1f}x")
+            if momentum_building:
+                imbalance_lead_conditions.append(f"MACD {macd_histogram:.2f}")
+            if buy_pressure:
+                imbalance_lead_conditions.append(f"B/S {buy_sell_ratio:.1f}")
+
+            # Require 3 core conditions: imbalance + volume + momentum
+            if imbalance_spike and volume_confirm and momentum_building and signal_type == 'none':
+                signal_type = 'imbalance_lead'
+                signal_reasons = imbalance_lead_conditions
+
             # 🔴 Bearish: Fade Pump (Reversal Trap)
             fade_pump_conditions = []
             # Tweak 1: Raised RSI threshold from 70 to 77 for extreme overbought (FOMO tops)

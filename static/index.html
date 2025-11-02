@@ -343,6 +343,16 @@
             cursor: help;
         }
 
+        .signal-imbalance {
+            color: #4DD0E1;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(77, 208, 225, 0.1);
+            cursor: help;
+        }
+
         .signal-spoof {
             color: #FFE082;
             font-weight: 600;
@@ -1073,7 +1083,7 @@
                 // Apply signal filter
                 let matchesSignal = true;
                 if (currentFilter === 'buy_dip') {
-                    matchesSignal = row.signal && row.signal.startsWith('buy_dip');
+                    matchesSignal = row.signal && (row.signal.startsWith('buy_dip') || row.signal.startsWith('imbalance_lead'));
                 } else if (currentFilter === 'bearish') {
                     matchesSignal = row.signal && (row.signal.startsWith('fade_pump') ||
                                                      row.signal.startsWith('spoof_alert') ||
@@ -1185,6 +1195,11 @@
                 label = 'Buy Dip';
                 colorClass = 'signal-buy';
                 explanation = 'Post-shakeout entry. MM dumps to shake weak hands, catch buyback lows.';
+            } else if (signalType === 'imbalance_lead') {
+                icon = '●';
+                label = 'Imbalance Lead';
+                colorClass = 'signal-imbalance';
+                explanation = 'Pre-breakout momentum. MM absorbing sells before FOMO chase (15-45min lead).';
             } else if (signalType === 'fade_pump') {
                 icon = '●';
                 label = 'Fade Pump';
