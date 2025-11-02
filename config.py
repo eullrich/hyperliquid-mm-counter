@@ -65,10 +65,10 @@ METRICS_UPDATE_INTERVAL = 300  # Every 5 minutes (aligns with candle close)
 # Data pruning/retention settings
 PRUNING_INTERVAL = 86400  # Run pruning once per day (24 hours)
 RETENTION_DAYS = {
-    '15m': 7,     # Keep 15m candles for 7 days
-    '1h': 7,      # Keep 1h candles for 7 days
+    '15m': 28,    # Keep 15m candles for 28 days (4 weeks)
+    '1h': 28,     # Keep 1h candles for 28 days (4 weeks)
     '4h': 90,     # Keep 4h candles for 90 days
-    'orderbook': 7,   # Keep orderbook aligned with shortest candle interval
+    'orderbook': 28,  # Keep orderbook aligned with shortest candle interval
     'oi': 90,     # Keep open interest for 90 days
     'funding': 90 # Keep funding rates for 90 days
 }
