@@ -748,7 +748,7 @@
             <div class="control-group">
                 <label for="interval">Candle:</label>
                 <select id="interval">
-                    <option value="5m">5 Minutes</option>
+                    <option value="15m">15 Minutes</option>
                     <option value="1h">1 Hour</option>
                     <option value="4h">4 Hours</option>
                 </select>
@@ -1391,8 +1391,8 @@
         let chart = null;
         let chartData = {};
         let currentChartCoin = null;
-        let currentChartInterval = '5m';
-        let currentLookbackHours = 48; // Default for 5m
+        let currentChartInterval = '15m';
+        let currentLookbackHours = 168; // Default for 15m (7 days)
         let comparisonTokens = [];
         let currentChartView = 'metrics'; // 'metrics' or 'orderbook'
         let currentOrderbookMode = 'heatmap'; // 'heatmap', 'depth', or 'imbalance'
@@ -1405,9 +1405,9 @@
 
         // Retention mapping
         const retentionHours = {
-            '5m': 48,   // 2 days
-            '1h': 168,  // 7 days
-            '4h': 2160  // 90 days
+            '15m': 672,  // 28 days (4 weeks)
+            '1h': 672,   // 28 days (4 weeks)
+            '4h': 2160   // 90 days
         };
 
         // Open chart modal
