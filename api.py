@@ -322,6 +322,7 @@ async def get_stats():
                 SUM(CASE WHEN signal LIKE 'fade_pump%' OR signal LIKE 'spoof_alert%' THEN 1 ELSE 0 END) as bearish_signals,
                 MAX(timestamp) as last_update
             FROM latest_metrics
+            WHERE interval = '4h'
         """
 
         with conn.cursor() as cur:
