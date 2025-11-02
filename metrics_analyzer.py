@@ -617,7 +617,7 @@ class MetricsAnalyzer:
         finally:
             self.db.return_connection(conn)
 
-    def compute_all_metrics(self, tokens: List[str], intervals: List[str] = ['5m', '1h', '4h']):
+    def compute_all_metrics(self, tokens: List[str], intervals: List[str] = ['15m', '1h', '4h']):
         """Compute metrics for all tokens and intervals"""
         total = len(tokens) * len(intervals)
         processed = 0
