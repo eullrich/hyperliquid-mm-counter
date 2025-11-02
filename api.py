@@ -358,7 +358,7 @@ async def get_chart_compare(
     coins: str = Query(..., description="Comma-separated list of token symbols"),
     metric: str = Query("anomaly_score", description="Metric to compare"),
     interval: str = Query("15m", regex="^(15m|1h|4h)$"),
-    lookback_hours: int = Query(24, ge=1, le=168)
+    lookback_hours: int = Query(24, ge=1, le=2160)
 ):
     """
     Get historical data for comparing the same metric across multiple tokens
@@ -450,7 +450,7 @@ async def get_chart_data(
     coin: str,
     interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     metrics: Optional[str] = Query(None, description="Comma-separated list of metrics to fetch"),
-    lookback_hours: int = Query(24, ge=1, le=168)
+    lookback_hours: int = Query(24, ge=1, le=2160)
 ):
     """
     Get historical metrics data for charting a single token
@@ -458,7 +458,7 @@ async def get_chart_data(
     - **coin**: Token symbol (e.g., BTC, ETH)
     - **interval**: Candle interval (15m, 1h, 4h)
     - **metrics**: Comma-separated metric names (default: all metrics)
-    - **lookback_hours**: Hours of history to fetch (max 168 = 7 days)
+    - **lookback_hours**: Hours of history to fetch (max 2160 = 90 days)
     """
     conn = db.get_connection()
     try:
@@ -551,7 +551,7 @@ async def get_chart_data(
 async def get_orderbook_depth(
     coin: str,
     interval: str = Query("15m", regex="^(15m|1h|4h)$"),
-    lookback_hours: int = Query(24, ge=1, le=168)
+    lookback_hours: int = Query(24, ge=1, le=2160)
 ):
     """Get historical orderbook depth data (10 levels each side) for a single token"""
     conn = db.get_connection()
@@ -622,7 +622,7 @@ async def get_orderbook_depth(
 async def get_orderbook_heatmap(
     coin: str,
     interval: str = Query("15m", regex="^(15m|1h|4h)$"),
-    lookback_hours: int = Query(24, ge=1, le=168)
+    lookback_hours: int = Query(24, ge=1, le=2160)
 ):
     """Get orderbook depth aggregated into price buckets for heatmap visualization"""
     conn = db.get_connection()
