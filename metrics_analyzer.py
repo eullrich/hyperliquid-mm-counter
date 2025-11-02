@@ -449,12 +449,14 @@ class MetricsAnalyzer:
 
             # 🔴 Bearish: Fade Pump (Reversal Trap)
             fade_pump_conditions = []
-            if rsi_14 > 70:
+            # Tweak 1: Raised RSI threshold from 70 to 77 for extreme overbought (FOMO tops)
+            if rsi_14 > 77:
                 fade_pump_conditions.append(f"RSI {rsi_14:.0f}")
             if obv_divergence and price_change_pct > 0:
                 fade_pump_conditions.append("OBV div")
-            if funding_rate > 0.0005 and oi_change_pct > 30:  # 0.05%
-                fade_pump_conditions.append(f"Fund {funding_rate*100:.3f}% + OI {oi_change_pct:.0f}%")
+            # Tweak 2: Hiked funding/OI bar to >0.07% AND >40% (was 0.05% and 30%)
+            if funding_rate > 0.0007 and oi_change_pct > 40:  # 0.07% + 40% OI for crowded longs
+                fade_pump_conditions.append(f"Fund {funding_rate*100:.2f}% & OI +{oi_change_pct:.0f}%")
             if buy_sell_ratio < 0.5:
                 fade_pump_conditions.append(f"B/S {buy_sell_ratio:.2f}")
 
