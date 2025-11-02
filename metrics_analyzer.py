@@ -432,11 +432,13 @@ class MetricsAnalyzer:
 
             # 🟢 Bullish: Buy Dip (Post-Shakeout)
             buy_dip_conditions = []
-            if price_deviation_from_ema < -5:
+            # Tweak 1: Tightened EMA threshold from -5% to -3.5% for earlier entry
+            if price_deviation_from_ema < -3.5:
                 buy_dip_conditions.append(f"EMA {price_deviation_from_ema:.1f}%")
-            if obv > 0 and not obv_divergence:  # OBV rebound
-                buy_dip_conditions.append("OBV rebound")
-            if cum_delta_positive_flip:
+            # Tweak 2: Volume pre-filter - require 1.5x+ volume before rebound
+            if obv > 0 and not obv_divergence and volume_ratio_to_avg > 1.5:  # OBV rebound with volume
+                buy_dip_conditions.append(f"Vol {volume_ratio_to_avg:.1f}x + OBV")
+            if cum_delta_positive_flip and volume_ratio_to_avg > 1.5:
                 buy_dip_conditions.append("Cum Δ flip")
             if funding_rate < -0.0003:  # -0.03%
                 buy_dip_conditions.append(f"Fund {funding_rate*100:.3f}%")
