@@ -46,7 +46,7 @@ async def root():
 
 @app.get("/api/metrics")
 async def get_metrics(
-    interval: str = Query("5m", regex="^(5m|1h|4h)$"),
+    interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     anomaly_only: bool = Query(False),
     limit: int = Query(100, ge=1, le=500),
     sort_by: str = Query("anomaly_score", regex="^(anomaly_score|price_change_pct|volume_ratio_to_avg|coin)$"),
@@ -55,7 +55,7 @@ async def get_metrics(
     """
     Get latest metrics for all tokens
 
-    - **interval**: Candle interval (5m, 1h, 4h)
+    - **interval**: Candle interval (15m, 1h, 4h)
     - **anomaly_only**: Filter to only show anomalies
     - **limit**: Max number of results
     - **sort_by**: Column to sort by
@@ -356,7 +356,7 @@ async def get_stats():
 async def get_chart_compare(
     coins: str = Query(..., description="Comma-separated list of token symbols"),
     metric: str = Query("anomaly_score", description="Metric to compare"),
-    interval: str = Query("5m", regex="^(5m|1h|4h)$"),
+    interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     lookback_hours: int = Query(24, ge=1, le=168)
 ):
     """
@@ -364,7 +364,7 @@ async def get_chart_compare(
 
     - **coins**: Comma-separated token symbols (e.g., BTC,ETH,SOL)
     - **metric**: Metric name to compare
-    - **interval**: Candle interval (5m, 1h, 4h)
+    - **interval**: Candle interval (15m, 1h, 4h)
     - **lookback_hours**: Hours of history to fetch (max 168 = 7 days)
     """
     conn = db.get_connection()
@@ -447,7 +447,7 @@ async def get_chart_compare(
 @app.get("/api/chart/{coin}")
 async def get_chart_data(
     coin: str,
-    interval: str = Query("5m", regex="^(5m|1h|4h)$"),
+    interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     metrics: Optional[str] = Query(None, description="Comma-separated list of metrics to fetch"),
     lookback_hours: int = Query(24, ge=1, le=168)
 ):
@@ -455,7 +455,7 @@ async def get_chart_data(
     Get historical metrics data for charting a single token
 
     - **coin**: Token symbol (e.g., BTC, ETH)
-    - **interval**: Candle interval (5m, 1h, 4h)
+    - **interval**: Candle interval (15m, 1h, 4h)
     - **metrics**: Comma-separated metric names (default: all metrics)
     - **lookback_hours**: Hours of history to fetch (max 168 = 7 days)
     """
@@ -549,7 +549,7 @@ async def get_chart_data(
 @app.get("/api/orderbook-depth/{coin}")
 async def get_orderbook_depth(
     coin: str,
-    interval: str = Query("5m", regex="^(5m|1h|4h)$"),
+    interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     lookback_hours: int = Query(24, ge=1, le=168)
 ):
     """Get historical orderbook depth data (10 levels each side) for a single token"""
@@ -620,7 +620,7 @@ async def get_orderbook_depth(
 @app.get("/api/orderbook-heatmap/{coin}")
 async def get_orderbook_heatmap(
     coin: str,
-    interval: str = Query("5m", regex="^(5m|1h|4h)$"),
+    interval: str = Query("15m", regex="^(15m|1h|4h)$"),
     lookback_hours: int = Query(24, ge=1, le=168)
 ):
     """Get orderbook depth aggregated into price buckets for heatmap visualization"""
