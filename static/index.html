@@ -952,6 +952,7 @@
         let autoRefreshInterval = null;
         let currentData = [];
         let currentCandleCount = 0;
+        let currentLatestCandleTime = null;
         let currentSort = { column: 'anomaly_score', order: 'desc' };
         let currentFilter = 'all';
 
@@ -994,11 +995,12 @@
                 const result = await response.json();
                 currentData = result.data;
                 currentCandleCount = result.candle_count;
+                currentLatestCandleTime = result.latest_candle_time;
 
                 // Format last candle time
                 let candleTimeStr = '';
-                if (result.latest_candle_time) {
-                    const candleTime = new Date(result.latest_candle_time);
+                if (currentLatestCandleTime) {
+                    const candleTime = new Date(currentLatestCandleTime);
                     candleTimeStr = ` • Last: ${candleTime.toLocaleTimeString()}`;
                 }
 
@@ -1104,9 +1106,17 @@
             // Update count
             const intervalSelect = document.getElementById('interval');
             const intervalValue = intervalSelect ? intervalSelect.value : '';
+
+            // Format last candle time
+            let candleTimeStr = '';
+            if (currentLatestCandleTime) {
+                const candleTime = new Date(currentLatestCandleTime);
+                candleTimeStr = ` • Last: ${candleTime.toLocaleTimeString()}`;
+            }
+
             const countText = searchTerm || currentFilter !== 'all'
-                ? `${filteredData.length} / ${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles`
-                : `${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles`;
+                ? `${filteredData.length} / ${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles${candleTimeStr}`
+                : `${currentData.length} tokens • ${intervalValue} • ${currentCandleCount} candles${candleTimeStr}`;
             document.getElementById('candle-count').textContent = countText;
 
             renderTable(filteredData);
