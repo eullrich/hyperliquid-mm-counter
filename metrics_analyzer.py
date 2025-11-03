@@ -5,11 +5,15 @@ Analyzes price, volume, OI, funding, and orderbook data to detect trading anomal
 """
 
 import logging
+import warnings
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
 from db import Database
+
+# Suppress pandas SQLAlchemy warnings (psycopg2 works fine)
+warnings.filterwarnings('ignore', message='pandas only supports SQLAlchemy')
 
 logger = logging.getLogger(__name__)
 
