@@ -269,10 +269,17 @@ class MetricsAnalyzer:
                 cumulative_delta = sum(delta_series)
 
             # VWAP calculation (Volume Weighted Average Price)
+            # Adaptive periods: 4h=5 (20hrs), 1h=10 (10hrs), 15m=20 (5hrs)
+            vwap_periods = {
+                '15m': 20,  # 5 hours
+                '1h': 10,   # 10 hours
+                '4h': 5     # 20 hours
+            }
+            lookback = vwap_periods.get(interval, 20)
+
             vwap = 0.0
-            if len(candles) >= 20:
-                # Calculate VWAP over last 20 periods
-                recent_candles = candles.tail(20)
+            if len(candles) >= lookback:
+                recent_candles = candles.tail(lookback)
                 typical_price = (recent_candles['high'] + recent_candles['low'] + recent_candles['close']) / 3
                 vwap = (typical_price * recent_candles['volume']).sum() / recent_candles['volume'].sum()
                 vwap = float(vwap) if not pd.isna(vwap) else price
