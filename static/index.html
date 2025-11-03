@@ -995,8 +995,15 @@
                 currentData = result.data;
                 currentCandleCount = result.candle_count;
 
+                // Format last candle time
+                let candleTimeStr = '';
+                if (result.latest_candle_time) {
+                    const candleTime = new Date(result.latest_candle_time);
+                    candleTimeStr = ` • Last: ${candleTime.toLocaleTimeString()}`;
+                }
+
                 // Update candle count display
-                document.getElementById('candle-count').textContent = `${currentData.length} tokens • ${interval} • ${currentCandleCount} candles`;
+                document.getElementById('candle-count').textContent = `${currentData.length} tokens • ${interval} • ${currentCandleCount} candles${candleTimeStr}`;
 
                 // Apply current sort
                 sortData(currentSort.column, false); // false = don't toggle, use current order

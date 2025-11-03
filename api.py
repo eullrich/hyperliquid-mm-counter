@@ -145,10 +145,20 @@ async def get_metrics(
             cur.execute(candle_count_query, [interval])
             avg_candles = cur.fetchone()[0] or 0
 
+            # Get latest candle timestamp for this interval
+            latest_candle_query = """
+                SELECT MAX(timestamp) as latest_timestamp
+                FROM candles
+                WHERE interval = %s
+            """
+            cur.execute(latest_candle_query, [interval])
+            latest_timestamp = cur.fetchone()[0] or 0
+
             return {
                 "interval": interval,
                 "count": len(results),
                 "candle_count": avg_candles,
+                "latest_candle_time": latest_timestamp,
                 "data": results
             }
 
