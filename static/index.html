@@ -1283,8 +1283,8 @@
 
         function getOBVClass(zscore) {
             if (zscore === null || zscore === undefined) return '';
-            // Use Z-score for relative intensity (like funding rate)
-            // >2 = extremely strong buying, <-2 = extremely strong selling
+            // Positive OBV Z-score = strong buying pressure (bullish) -> green
+            // Negative OBV Z-score = strong selling pressure (bearish) -> red
             if (zscore > 2) return 'metric-extreme-high positive';
             if (zscore > 1) return 'metric-high positive';
             if (zscore < -2) return 'metric-extreme-high negative';
@@ -1307,26 +1307,33 @@
             if (val === null || val === undefined) return 'neutral';
             // Positive MACD histogram = bullish momentum -> green
             // Negative MACD histogram = bearish momentum -> red
-            if (val > 0.01) return 'positive';
-            if (val < -0.01) return 'negative';
-            return 'neutral';
+            if (val > 0.05) return 'metric-extreme-high positive';
+            if (val > 0.01) return 'metric-high positive';
+            if (val < -0.05) return 'metric-extreme-high negative';
+            if (val < -0.01) return 'metric-high negative';
+            return val > 0 ? 'positive' : (val < 0 ? 'negative' : 'neutral');
         }
 
         function getDeltaClass(val) {
             if (val === null || val === undefined) return 'neutral';
             // Positive cumulative delta = net buying pressure (bullish) -> green
             // Negative cumulative delta = net selling pressure (bearish) -> red
-            if (val > 0) return 'positive';
-            if (val < 0) return 'negative';
-            return 'neutral';
+            const absVal = Math.abs(val);
+            if (absVal > 1000000) {
+                return val > 0 ? 'metric-extreme-high positive' : 'metric-extreme-high negative';
+            }
+            if (absVal > 500000) {
+                return val > 0 ? 'metric-high positive' : 'metric-high negative';
+            }
+            return val > 0 ? 'positive' : (val < 0 ? 'negative' : 'neutral');
         }
 
         function getVolumeRatioClass(val) {
             if (val === null || val === undefined) return 'neutral';
-            // High volume ratio (neutral - could be bullish or bearish breakout)
-            // Keep yellow/red for extreme values as warning
-            if (val > 3) return 'metric-extreme-high';
-            if (val > 2) return 'metric-high';
+            // High volume ratio = high activity/volatility (neutral warning)
+            // Use yellow for attention without directional bias
+            if (val > 4) return 'metric-extreme-high';
+            if (val > 2.5) return 'metric-high';
             return 'neutral';
         }
 
@@ -1352,7 +1359,9 @@
             if (val === null || val === undefined) return 'neutral';
             // Buy/Sell ratio: >2 = buying pressure (bullish) -> green
             // <0.5 = selling pressure (bearish) -> red
+            if (val > 3) return 'metric-extreme-high positive';
             if (val > 2) return 'metric-high positive';
+            if (val < 0.33) return 'metric-extreme-high negative';
             if (val < 0.5) return 'metric-high negative';
             return 'neutral';
         }
@@ -1370,8 +1379,9 @@
 
         function getScoreClass(val) {
             if (val === null || val === undefined) return 'neutral';
-            if (val > 2) return 'metric-extreme-high';
-            if (val > 1) return 'metric-high';
+            // Anomaly score = neutral warning (high activity, not directional)
+            if (val > 3) return 'metric-extreme-high';
+            if (val > 2) return 'metric-high';
             return 'neutral';
         }
 
