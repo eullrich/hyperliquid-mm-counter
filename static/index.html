@@ -811,8 +811,8 @@
                         <th class="sortable tooltip" data-col="oi_change_pct">OI Δ%
                             <span class="tooltiptext"><strong>Open Interest Change - New Positions</strong><br/>How many new futures contracts opened?<br/>• +30%+ = lots of NEW leverage entering<br/>• -20%+ = positions CLOSING (unwinding)<br/>• Rising OI + rising price = new longs (liquidation risk)<br/>• Rising OI + falling price = new shorts<br/><em>High OI = more fuel for liquidation cascades</em></span>
                         </th>
-                        <th class="sortable tooltip" data-col="funding_rate_zscore">Fund Z
-                            <span class="tooltiptext"><strong>Funding Rate Z-Score - How Extreme Are Fees?</strong><br/>Measures funding rate vs its average.<br/>• >2 = extremely HIGH funding (longs paying shorts)<br/>• <-2 = extremely LOW funding (shorts paying longs)<br/>• High positive = too many longs (likely to reverse down)<br/><em>Extreme funding = one side too crowded</em></span>
+                        <th class="sortable tooltip" data-col="funding_rate">Fund %
+                            <span class="tooltiptext"><strong>Funding Rate - Perp Fees (8hr rate)</strong><br/>Fee paid every 8 hours between longs/shorts.<br/>• >0.05% = longs paying shorts (crowded long)<br/>• >0.07% = extreme long bias (fade signal)<br/>• <0% = shorts paying longs (crowded short)<br/>• Direct, actionable thresholds for MM detection<br/><em>Raw rate > Z-score for 15min signals</em></span>
                         </th>
                         <th class="sortable tooltip" data-col="buy_sell_ratio">B/S Ratio
                             <span class="tooltiptext"><strong>Buy vs Sell Order Book Depth</strong><br/>Ratio of buy orders to sell orders (top 10 levels).<br/>• >1.5 = more buy support (bullish)<br/>• <0.5 = more sell resistance (bearish)<br/>• 1.0 = balanced<br/><em>BUT: Can be spoofed (fake orders)</em></span>
@@ -897,8 +897,8 @@
                             <span>OI Δ%</span>
                         </label>
                         <label class="metric-checkbox">
-                            <input type="checkbox" value="funding_rate_zscore">
-                            <span>Funding Z</span>
+                            <input type="checkbox" value="funding_rate">
+                            <span>Fund %</span>
                         </label>
                         <label class="metric-checkbox">
                             <input type="checkbox" value="buy_sell_ratio">
@@ -1141,7 +1141,7 @@
                     <td class="${getRSIClass(row.rsi_14)}">${formatNumber(row.rsi_14, 1)}</td>
                     <td class="${getMACDClass(row.macd_histogram)}">${formatNumber(row.macd_histogram, 4)}</td>
                     <td class="${getChangeClass(row.oi_change_pct)}">${formatPercent(row.oi_change_pct)}</td>
-                    <td class="${getZScoreClass(row.funding_rate_zscore)}">${formatNumber(row.funding_rate_zscore, 2)}</td>
+                    <td class="${getFundingClass(row.funding_rate)}">${formatFundingRate(row.funding_rate)}</td>
                     <td class="${getRatioClass(row.buy_sell_ratio)}">${formatNumber(row.buy_sell_ratio, 2)}</td>
                     <td class="${getImbalanceClass(row.cumulative_imbalance_pct)}">${formatPercent(row.cumulative_imbalance_pct)}</td>
                     <td>${formatSignal(row.signal)}</td>
@@ -1330,15 +1330,22 @@
             return 'neutral';
         }
 
-        function getZScoreClass(val) {
+        function getFundingClass(val) {
             if (val === null || val === undefined) return 'neutral';
-            // Positive z-score = high funding (overleveraged longs, bearish) -> red
-            // Negative z-score = negative funding (overleveraged shorts, bullish) -> green
-            if (val > 2) return 'metric-extreme-high negative';
-            if (val > 1.5) return 'metric-high negative';
-            if (val < -2) return 'metric-extreme-high positive';
-            if (val < -1.5) return 'metric-high positive';
+            // Raw funding rate thresholds (8hr rate as decimal)
+            // Positive = longs pay shorts (crowded long, bearish) -> red
+            // Negative = shorts pay longs (crowded short, bullish) -> green
+            if (val > 0.0007) return 'metric-extreme-high negative';  // 0.07%+ extreme long bias
+            if (val > 0.0005) return 'metric-high negative';          // 0.05%+ high long bias
+            if (val < -0.0005) return 'metric-extreme-high positive'; // -0.05%+ extreme short bias
+            if (val < -0.0003) return 'metric-high positive';         // -0.03%+ high short bias
             return val > 0 ? 'negative' : (val < 0 ? 'positive' : 'neutral');
+        }
+
+        function formatFundingRate(val) {
+            if (val === null || val === undefined) return '-';
+            // Convert to percentage (e.g., 0.0007 -> 0.07%)
+            return (val * 100).toFixed(3) + '%';
         }
 
         function getRatioClass(val) {
