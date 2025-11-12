@@ -1,14 +1,14 @@
 """
 Token category mappings for Hyperliquid tokens
 Auto-generated from Hyperliquid frontend
-Last updated: 2025-11-01 18:13:26
+Last updated: 2025-11-11 18:41:16
 """
 
 # Category definitions
 TOKEN_CATEGORIES = {
     'AI': [
-        '0G', 'AI16Z', 'AIXBT', 'FET', 'GRASS', 'GRIFFAIN', 'IO', 'KAITO', 'NEAR', 'PROMPT',
-        'RENDER', 'RNDR', 'TAO', 'VIRTUAL', 'VVV', 'WLD', 'ZEREBRO',
+        '0G', 'AIXBT', 'FET', 'GRASS', 'GRIFFAIN', 'IO', 'KAITO', 'NEAR', 'PROMPT', 'RENDER',
+        'RNDR', 'TAO', 'VIRTUAL', 'VVV', 'WLD', 'ZEREBRO',
     ],
 
     'Defi': [
@@ -25,10 +25,10 @@ TOKEN_CATEGORIES = {
 
     'Layer 1': [
         '0G', 'ADA', 'ALGO', 'APT', 'ATOM', 'AVAX', 'BCH', 'BERA', 'BNB', 'BSV',
-        'BTC', 'CFX', 'DOT', 'DYM', 'ETC', 'ETH', 'FTM', 'HYPE', 'INIT', 'INJ',
-        'IP', 'KAS', 'LTC', 'MINA', 'MON', 'NEAR', 'NEO', 'NTRN', 'OM', 'POLYX',
-        'RUNE', 'S', 'SAGA', 'SEI', 'SOL', 'SUI', 'TIA', 'TON', 'TRX', 'XLM',
-        'XPL', 'XRP', 'ZEN', 'ZETA',
+        'BTC', 'CC', 'CFX', 'DOT', 'DYM', 'ETC', 'ETH', 'FTM', 'HYPE', 'INIT',
+        'INJ', 'IP', 'KAS', 'LTC', 'MINA', 'MON', 'NEAR', 'NEO', 'NTRN', 'OM',
+        'POLYX', 'RUNE', 'S', 'SAGA', 'SEI', 'SOL', 'SUI', 'TIA', 'TON', 'TRX',
+        'XLM', 'XPL', 'XRP', 'ZEN', 'ZETA',
     ],
 
     'Layer 2': [
@@ -43,7 +43,7 @@ TOKEN_CATEGORIES = {
     ],
 
     'Pre-launch': [
-        'CC', 'MEGA', 'MON',
+        'MEGA', 'MON',
     ],
 
 

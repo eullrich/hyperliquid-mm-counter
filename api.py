@@ -339,13 +339,24 @@ async def get_stats():
             cur.execute(query)
             row = cur.fetchone()
 
+            # Calculate 24h aggregate open interest across all tokens
+            oi_query = """
+                SELECT SUM(open_interest) as total_oi
+                FROM latest_metrics
+                WHERE interval = '15m' AND open_interest IS NOT NULL
+            """
+            cur.execute(oi_query)
+            oi_row = cur.fetchone()
+            total_oi = float(oi_row[0]) if oi_row and oi_row[0] else 0.0
+
             if row:
                 return {
                     "token_count": row[0],
                     "total_metrics": row[1],
                     "buy_dip_signals": row[2],
                     "bearish_signals": row[3],
-                    "last_update": row[4] if row[4] else None  # timestamp is already a bigint/int
+                    "last_update": row[4] if row[4] else None,  # timestamp is already a bigint/int
+                    "total_open_interest": total_oi
                 }
 
             return {
@@ -353,7 +364,8 @@ async def get_stats():
                 "total_metrics": 0,
                 "buy_dip_signals": 0,
                 "bearish_signals": 0,
-                "last_update": None
+                "last_update": None,
+                "total_open_interest": 0.0
             }
 
     except Exception as e:
